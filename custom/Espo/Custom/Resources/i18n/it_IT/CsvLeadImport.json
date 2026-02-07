@@ -1,0 +1,30 @@
+{
+    "fields": {
+        "csvUrl": "CSV URL",
+        "defaultFieldMapping": "Mappatura standard",
+        "duplicateCheckFields": "Controlla duplicati per campi",
+        "fieldMapping": "Mappatura campi",
+        "firstRowIsHeader": "Prima riga intestazione",
+        "isActive": "Attivo",
+        "lastError": "Ultimo errore",
+        "lastProcessedRow": "Ultima riga elaborata",
+        "lastRunAt": "Lancio ultimo",
+        "leadsImportedCount": "Contatore lead importati",
+        "leadSource": "Fonte lead",
+        "skipDuplicates": "Saltare i duplicati",
+        "team": "Team"
+    },
+    "labels": {
+        "Create CsvLeadImport": "Crea csv fonte lead"
+    },
+    "links": {
+        "team": "Team"
+    },
+    "options": {
+        "duplicateCheckFields": {
+            "emailAddress": "Email",
+            "name": "Nome",
+            "phoneNumber": "Telefono primario"
+        }
+    }
+}
