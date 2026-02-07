@@ -1,0 +1,7 @@
+{
+    "options": {
+        "job": {
+            "ImportLeadsFromCsv": "Import Leads from CSV"
+        }
+    }
+}

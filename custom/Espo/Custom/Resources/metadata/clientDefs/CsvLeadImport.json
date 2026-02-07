@@ -1,0 +1,29 @@
+{
+    "controller": "controllers/record",
+    "iconClass": "fas fa-file-csv",
+    "menu": {
+        "detail": {
+            "buttons": [
+                "__APPEND__",
+                {
+                    "label": "Run Import Now",
+                    "action": "runImportNow",
+                    "acl": "edit",
+                    "data": {
+                        "handler": "custom:handlers/csv-lead-import"
+                    }
+                },
+                {
+                    "label": "Reset Counter",
+                    "action": "resetCounter",
+                    "acl": "edit",
+                    "data": {
+                        "handler": "custom:handlers/csv-lead-import"
+                    }
+                }
+            ]
+        }
+    },
+    "boolFilterList": ["onlyActive"],
+    "filterList": ["isActive"]
+}

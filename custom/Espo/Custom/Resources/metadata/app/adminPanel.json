@@ -1,0 +1,13 @@
+{
+    "integrations": {
+        "itemList": [
+            "__APPEND__",
+            {
+                "url": "#CsvLeadImport",
+                "label": "CSV Lead Import",
+                "iconClass": "fas fa-file-csv",
+                "description": "csvLeadImport"
+            }
+        ]
+    }
+}
