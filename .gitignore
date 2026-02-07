@@ -8,6 +8,7 @@
 /data/upload/
 /data/export/
 /data/.data
+/install/config.php
 
 # IDE / OS
 .idea/
