@@ -1,0 +1,22 @@
+{
+    "entity": true,
+    "object": true,
+    "tab": false,
+    "tabAclPermission": "admin",
+    "acl": "true",
+    "aclActionList": ["create", "read", "edit", "delete"],
+    "aclLevelList": ["all", "no"],
+    "aclActionLevelListMap": {
+        "read": ["all", "no"],
+        "stream": ["no"]
+    },
+    "aclPortal": false,
+    "module": "Custom",
+    "isCustom": true,
+    "notifications": false,
+    "stream": false,
+    "disabled": false,
+    "importable": false,
+    "exportable": false,
+    "layoutDefaultSidePanelDisabled": true
+}

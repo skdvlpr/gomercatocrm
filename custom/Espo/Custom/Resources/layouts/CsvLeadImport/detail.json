@@ -1,0 +1,33 @@
+[
+    {
+        "label": "Overview",
+        "rows": [
+            [{"name": "name"}, {"name": "isActive"}],
+            [{"name": "csvUrl"}, false]
+        ]
+    },
+    {
+        "label": "Settings",
+        "rows": [
+            [{"name": "firstRowIsHeader"}, {"name": "defaultFieldMapping"}],
+            [{"name": "leadSource"}, {"name": "skipDuplicates"}],
+            [{"name": "assignedUser"}, {"name": "team"}],
+            [{"name": "duplicateCheckFields"}, false],
+            [{"name": "fieldMapping", "fullWidth": true}]
+        ]
+    },
+    {
+        "label": "Status",
+        "rows": [
+            [{"name": "lastRunAt"}, {"name": "leadsImportedCount"}],
+            [{"name": "lastProcessedRow"}, false],
+            [{"name": "lastError", "fullWidth": true}]
+        ]
+    },
+    {
+        "label": "Description",
+        "rows": [
+            [{"name": "description", "fullWidth": true}]
+        ]
+    }
+]

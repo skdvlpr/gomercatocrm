@@ -1,0 +1,6 @@
+{
+    "ensureScheduledJobs": {
+        "className": "Espo\\Custom\\Classes\\ConsoleCommands\\EnsureScheduledJobs",
+        "listed": true
+    }
+}

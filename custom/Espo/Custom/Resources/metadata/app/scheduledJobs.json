@@ -1,0 +1,5 @@
+{
+    "ImportLeadsFromCsv": {
+        "jobClassName": "Espo\\Custom\\Classes\\Jobs\\ImportLeadsFromCsv"
+    }
+}

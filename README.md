@@ -17,8 +17,10 @@ EspoCRM customized for GoMercato.
    - Database: `db`
    - User: `db`
    - Password: `db`
+5. **After Installation**: Run `ddev restart` to setup automatic jobs.
 
 ## Auto-features
 
 - ✅ Cron runs every minute (via ddev-cron addon)
+- ✅ **CSV Lead Import**: Auto-imports leads from public Google Sheets CSV URLs (configured in Admin)
 - ✅ Cache clears on every `ddev start`/`restart`

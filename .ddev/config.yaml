@@ -290,4 +290,11 @@ corepack_enable: false
 # for them. Example:
 hooks:
   post-start:
-    - exec: "if [ -f /var/www/html/data/config.php ]; then php /var/www/html/clear_cache.php && echo 'EspoCRM cache cleared!'; else echo 'EspoCRM not installed yet - skipping cache clear'; fi"
+    - exec: |
+        if [ -f /var/www/html/data/config.php ] && grep -q "database" /var/www/html/data/config.php; then
+          echo 'EspoCRM is installed, running maintenance...'
+          php /var/www/html/clear_cache.php && echo 'Cache cleared!' || echo 'Cache clear failed (non-critical)'
+          php /var/www/html/bin/command ensureScheduledJobs && echo 'Scheduled jobs configured!' || echo 'Scheduled jobs setup skipped'
+        else
+          echo 'EspoCRM not fully installed yet - run installer at https://gomercatocrm.ddev.site'
+        fi

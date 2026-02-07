@@ -1,0 +1,50 @@
+{
+    "labels": {
+        "Create CsvLeadImport": "Create CSV Import",
+        "Run Import Now": "Run Import Now",
+        "Reset Counter": "Reset Counter"
+    },
+    "fields": {
+        "name": "Name",
+        "csvUrl": "CSV URL",
+        "isActive": "Is Active",
+        "lastProcessedRow": "Last Processed Row",
+        "lastRunAt": "Last Run At",
+        "lastError": "Last Error",
+        "leadsImportedCount": "Leads Imported",
+        "firstRowIsHeader": "First Row is Header",
+        "fieldMapping": "Field Mapping",
+        "defaultFieldMapping": "Use Default Mapping",
+        "assignedUser": "Assigned User",
+        "team": "Team",
+        "leadSource": "Lead Source",
+        "skipDuplicates": "Skip Duplicates",
+        "duplicateCheckFields": "Duplicate Check Fields",
+        "description": "Description"
+    },
+    "links": {
+        "assignedUser": "Assigned User",
+        "team": "Team"
+    },
+    "tooltips": {
+        "csvUrl": "URL of a publicly accessible CSV file. For Google Sheets, publish as CSV: File → Share → Publish to web → CSV format. Example: https://docs.google.com/spreadsheets/d/{ID}/export?format=csv",
+        "fieldMapping": "JSON object mapping CSV column names to Lead fields. Example: {\"first_name\": \"firstName\", \"email\": \"emailAddress\"}",
+        "defaultFieldMapping": "If enabled, common column names (firstName, email, phone, etc.) will be automatically mapped to Lead fields.",
+        "skipDuplicates": "If enabled, leads with matching email/phone will not be created."
+    },
+    "options": {
+        "duplicateCheckFields": {
+            "emailAddress": "Email",
+            "phoneNumber": "Phone",
+            "name": "Name"
+        }
+    },
+    "messages": {
+        "Are you sure you want to run the import now?": "Are you sure you want to run the import now?",
+        "Are you sure you want to reset the counter?": "Are you sure you want to reset the counter? This will re-import all rows from the beginning.",
+        "Import completed": "Import completed",
+        "leads imported": "leads imported",
+        "Counter has been reset": "Counter has been reset",
+        "total": "total"
+    }
+}

@@ -1,0 +1,8 @@
+[
+    {"name": "name", "link": true, "width": 30},
+    {"name": "csvUrl", "width": 25},
+    {"name": "isActive", "width": 10},
+    {"name": "lastRunAt", "width": 15},
+    {"name": "leadsImportedCount", "width": 10},
+    {"name": "lastProcessedRow", "width": 10}
+]
