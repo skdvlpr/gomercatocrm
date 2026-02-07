@@ -1,0 +1,16 @@
+# EspoCRM runtime data
+/data/config.php
+/data/config-internal.php
+/data/state.php
+/data/cache/
+/data/tmp/
+/data/logs/
+/data/upload/
+/data/export/
+/data/.data
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

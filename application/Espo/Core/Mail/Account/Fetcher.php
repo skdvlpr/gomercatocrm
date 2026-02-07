@@ -1,0 +1,464 @@
+<?php
+/************************************************************************
+ * This file is part of EspoCRM.
+ *
+ * EspoCRM – Open Source CRM application.
+ * Copyright (C) 2014-2026 EspoCRM, Inc.
+ * Website: https://www.espocrm.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * The interactive user interfaces in modified source and object code versions
+ * of this program must display Appropriate Legal Notices, as required under
+ * Section 5 of the GNU Affero General Public License version 3.
+ *
+ * In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+ * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
+ ************************************************************************/
+
+namespace Espo\Core\Mail\Account;
+
+use Espo\Core\Exceptions\Error;
+use Espo\Core\Mail\Account\Storage\Flag;
+use Espo\Core\Mail\Exceptions\ImapError;
+use Espo\Core\Mail\Exceptions\NoImap;
+use Espo\Core\Mail\Importer;
+use Espo\Core\Mail\Importer\Data as ImporterData;
+use Espo\Core\Mail\ParserFactory;
+use Espo\Core\Mail\MessageWrapper;
+use Espo\Core\Mail\Account\Hook\BeforeFetch as BeforeFetchHook;
+use Espo\Core\Mail\Account\Hook\AfterFetch as AfterFetchHook;
+use Espo\Core\Mail\Account\Hook\BeforeFetchResult as BeforeFetchHookResult;
+use Espo\Core\Utils\Config;
+use Espo\Core\Utils\Log;
+use Espo\Core\Field\DateTime as DateTimeField;
+use Espo\Entities\EmailFilter;
+use Espo\Entities\Email;
+use Espo\Entities\InboundEmail;
+use Espo\ORM\Collection;
+use Espo\ORM\EntityManager;
+use Espo\ORM\Query\Part\Expression;
+use Espo\ORM\Query\Part\Order;
+use Throwable;
+use DateTime;
+
+class Fetcher
+{
+    public function __construct(
+        private Importer $importer,
+        private StorageFactory $storageFactory,
+        private Config $config,
+        private Log $log,
+        private EntityManager $entityManager,
+        private ParserFactory $parserFactory,
+        private ?BeforeFetchHook $beforeFetchHook,
+        private ?AfterFetchHook $afterFetchHook
+    ) {}
+
+    /**
+     * @throws Error
+     * @throws ImapError
+     * @throws NoImap
+     */
+    public function fetch(Account $account): void
+    {
+        if (!$account->isAvailableForFetching()) {
+            throw new Error("{$account->getEntityType()} {$account->getId()} is not active.");
+        }
+
+        $monitoredFolderList = $account->getMonitoredFolderList();
+
+        if (count($monitoredFolderList) === 0) {
+            return;
+        }
+
+        $filterList = $this->getFilterList($account);
+
+        $storage = $this->storageFactory->create($account);
+
+        foreach ($monitoredFolderList as $folder) {
+            $this->fetchFolder($account, $folder, $storage, $filterList);
+        }
+
+        $storage->close();
+    }
+
+    /**
+     * @param Collection<EmailFilter> $filterList
+     * @throws Error
+     * @throws ImapError
+     */
+    private function fetchFolder(
+        Account $account,
+        string $folderOriginal,
+        Storage $storage,
+        Collection $filterList,
+    ): void {
+
+        $fetchData = $account->getFetchData();
+
+        $folder = mb_convert_encoding($folderOriginal, 'UTF7-IMAP', 'UTF-8');
+
+        try {
+            $storage->selectFolder($folderOriginal);
+        } catch (Throwable $e) {
+            $message = "{$account->getEntityType()} {$account->getId()}, " .
+                "could not select folder '$folder'; {$e->getMessage()}";
+
+            $this->log->error($message, ['exception' => $e]);
+
+            return;
+        }
+
+        $lastId = $fetchData->getLastUid($folder);
+        $lastDate = $fetchData->getLastDate($folder);
+        $forceByDate = $fetchData->getForceByDate($folder);
+        $portionLimit = $forceByDate ? 0 : $account->getPortionLimit();
+
+        $previousLastId = $lastId;
+
+        $ids = $this->fetchIds(
+            account: $account,
+            storage: $storage,
+            lastUid: $lastId,
+            lastDate: $lastDate,
+            forceByDate: $forceByDate,
+        );
+
+        if (count($ids) === 1 && $ids[0] === $lastId) {
+            return;
+        }
+
+        $counter = 0;
+
+        foreach ($ids as $id) {
+            if ($counter === count($ids) - 1) {
+                $lastId = $id;
+            }
+
+            if ($forceByDate && $previousLastId && $id <= $previousLastId) {
+                $counter++;
+
+                continue;
+            }
+
+            $email = $this->fetchEmail(
+                account: $account,
+                storage: $storage,
+                id: $id,
+                filterList: $filterList,
+                mappedEmailFolderId: $account->getMappedEmailFolder($folderOriginal)?->getId(),
+            );
+
+            $isLast = $counter === count($ids) - 1;
+            $isLastInPortion = $counter === $portionLimit - 1;
+
+            if ($isLast || $isLastInPortion) {
+                $lastId = $id;
+
+                if ($email && $email->getDateSent()) {
+                    $lastDate = $email->getDateSent();
+
+                    if ($lastDate->toTimestamp() >= (new DateTime())->getTimestamp()) {
+                        $lastDate = DateTimeField::createNow();
+                    }
+                }
+
+                break;
+            }
+
+            $counter ++;
+        }
+
+        if ($forceByDate) {
+            $lastDate = DateTimeField::createNow();
+        }
+
+        $fetchData->setLastDate($folder, $lastDate);
+        $fetchData->setLastUid($folder, $lastId);
+
+        if ($forceByDate && $previousLastId) {
+            $ids = $storage->getUidsFromUid($previousLastId);
+
+            if (count($ids) && $ids[0] > $previousLastId) {
+                $fetchData->setForceByDate($folder, false);
+            }
+        }
+
+        if (
+            !$forceByDate &&
+            count($ids) &&
+            $previousLastId &&
+            $previousLastId >= $lastId
+        ) {
+            // Handling broken numbering. Next time fetch since the last date rather than the last UID.
+            $fetchData->setForceByDate($folder, true);
+        }
+
+        $account->updateFetchData($fetchData);
+    }
+
+    /**
+     * @return int[]
+     * @throws Error
+     * @throws ImapError
+     */
+    private function fetchIds(
+        Account $account,
+        Storage $storage,
+        ?int $lastUid,
+        ?DateTimeField $lastDate,
+        bool $forceByDate,
+    ): array {
+
+        if ($lastUid !== null && !$forceByDate) {
+            return $storage->getUidsFromUid($lastUid);
+        }
+
+        if ($lastDate) {
+            return $storage->getUidsSinceDate($lastDate);
+        }
+
+        if (!$account->getFetchSince()) {
+            throw new Error("{$account->getEntityType()} {$account->getId()}, no fetch-since.");
+        }
+
+        $fetchSince = $account->getFetchSince()->toDateTime();
+
+        return $storage->getUidsSinceDate(
+            DateTimeField::fromDateTime($fetchSince)
+        );
+    }
+
+    /**
+     * @param Collection<EmailFilter> $filterList
+     */
+    private function fetchEmail(
+        Account $account,
+        Storage $storage,
+        int $id,
+        Collection $filterList,
+        ?string $mappedEmailFolderId,
+    ): ?Email {
+
+        $teamIdList = $account->getTeams()->getIdList();
+        $userIdList = $account->getUsers()->getIdList();
+        $userId = $account->getUser() ? $account->getUser()->getId() : null;
+        $assignedUserId = $account->getAssignedUser() ? $account->getAssignedUser()->getId() : null;
+        $groupEmailFolderId = $account->getGroupEmailFolder() ? $account->getGroupEmailFolder()->getId() : null;
+
+        $fetchOnlyHeader = $this->checkFetchOnlyHeader($storage, $id);
+
+        $folderData = $this->prepareFolderData($userId, $mappedEmailFolderId, $account);
+
+        $flags = null;
+
+        $parser = $this->parserFactory->create();
+
+        $importerData = ImporterData
+            ::create()
+            ->withTeamIdList($teamIdList)
+            ->withFilterList($filterList)
+            ->withFetchOnlyHeader($fetchOnlyHeader)
+            ->withFolderData($folderData)
+            ->withUserIdList($userIdList)
+            ->withAssignedUserId($assignedUserId)
+            ->withGroupEmailFolderId($groupEmailFolderId);
+
+        try {
+            $message = new MessageWrapper(
+                id: $id,
+                storage: $storage,
+                parser: $parser,
+                peek: $account->keepFetchedEmailsUnread(),
+            );
+
+            $hookResult = null;
+
+            if ($this->beforeFetchHook) {
+                $hookResult = $this->processBeforeFetchHook($account, $message);
+            }
+
+            if ($hookResult && $hookResult->toSkip()) {
+                return null;
+            }
+
+            if ($message->isFetched() && $account->keepFetchedEmailsUnread()) {
+                $flags = $message->getFlags();
+            }
+
+            $email = $this->importMessage($account, $message, $importerData);
+
+            if (!$email) {
+                return null;
+            }
+
+            if (
+                $account->keepFetchedEmailsUnread() &&
+                $flags !== null &&
+                !in_array(Flag::SEEN, $flags)
+            ) {
+                $storage->unmarkSeen($id);
+            }
+        } catch (Throwable $e) {
+            $this->log->error(
+                "{$account->getEntityType()} {$account->getId()}, get message; " .
+                "{$e->getCode()} {$e->getMessage()}"
+            );
+
+            return null;
+        }
+
+        $account->relateEmail($email);
+
+        if (!$this->afterFetchHook) {
+            return $email;
+        }
+
+        try {
+            $this->afterFetchHook->process(
+                $account,
+                $email,
+                $hookResult ?? BeforeFetchHookResult::create()
+            );
+        } catch (Throwable $e) {
+            $this->log->error(
+                "{$account->getEntityType()} {$account->getId()}, after-fetch hook; " .
+                "{$e->getCode()} {$e->getMessage()}"
+            );
+        }
+
+        return $email;
+    }
+
+    private function processBeforeFetchHook(Account $account, MessageWrapper $message): BeforeFetchHookResult
+    {
+        assert($this->beforeFetchHook !== null);
+
+        try {
+            return $this->beforeFetchHook->process($account, $message);
+        } catch (Throwable $e) {
+            $this->log->error(
+                "{$account->getEntityType()} {$account->getId()}, before-fetch hook; " .
+                "{$e->getCode()} {$e->getMessage()}"
+            );
+        }
+
+        return BeforeFetchHookResult::create()->withToSkip();
+    }
+
+    /**
+     * @return Collection<EmailFilter>
+     */
+    private function getFilterList(Account $account): Collection
+    {
+        $actionList = [EmailFilter::ACTION_SKIP];
+
+        if ($account->getEntityType() === InboundEmail::ENTITY_TYPE) {
+            $actionList[] = EmailFilter::ACTION_MOVE_TO_GROUP_FOLDER;
+        }
+
+        $builder = $this->entityManager
+            ->getRDBRepository(EmailFilter::ENTITY_TYPE)
+            ->where([
+                'action' => $actionList,
+                'OR' => [
+                    [
+                        'parentType' => $account->getEntityType(),
+                        'parentId' => $account->getId(),
+                        'action' => $actionList,
+                    ],
+                    [
+                        'parentId' => null,
+                        'action' => EmailFilter::ACTION_SKIP,
+                    ],
+                ]
+            ]);
+
+        if (count($actionList) > 1) {
+            $builder->order(
+                Order::createByPositionInList(
+                    Expression::column('action'),
+                    $actionList
+                )
+            );
+        }
+
+        /** @var Collection<EmailFilter> */
+        return $builder->find();
+    }
+
+    private function checkFetchOnlyHeader(Storage $storage, int $id): bool
+    {
+        $maxSize = $this->config->get('emailMessageMaxSize');
+
+        if (!$maxSize) {
+            return false;
+        }
+
+        try {
+            $size = $storage->getSize($id);
+        } catch (Throwable) {
+            return false;
+        }
+
+        if ($size > $maxSize * 1024 * 1024) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function importMessage(
+        Account $account,
+        MessageWrapper $message,
+        ImporterData $data
+    ): ?Email {
+
+        try {
+            return $this->importer->import($message, $data);
+        } catch (Throwable $e) {
+            $message = "{$account->getEntityType()} {$account->getId()}, import message; " .
+                "{$e->getCode()} {$e->getMessage()}";
+
+            $this->log->error($message, ['exception' => $e]);
+
+            if ($this->entityManager->getLocker()->isLocked()) {
+                $this->entityManager->getLocker()->rollback();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function prepareFolderData(?string $userId, ?string $mappedEmailFolderId, Account $account): array
+    {
+        if (!$userId) {
+            return [];
+        }
+
+        $folderData = [];
+
+        if ($mappedEmailFolderId) {
+            $folderData[$userId] = $mappedEmailFolderId;
+        } else if ($account->getEmailFolder()) {
+            $folderData[$userId] = $account->getEmailFolder()->getId();
+        }
+
+        return $folderData;
+    }
+}
