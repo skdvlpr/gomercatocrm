@@ -32,7 +32,7 @@ class CsvLeadImportService
         'fullname' => 'name',
         'full_name' => 'name',
         'full name' => 'name',
-        
+
         // Contact fields
         'email' => 'emailAddress',
         'emailaddress' => 'emailAddress',
@@ -43,7 +43,7 @@ class CsvLeadImportService
         'phone_number' => 'phoneNumber',
         'telephone' => 'phoneNumber',
         'mobile' => 'phoneNumber',
-        
+
         // Company fields
         'company' => 'accountName',
         'companyname' => 'accountName',
@@ -53,14 +53,14 @@ class CsvLeadImportService
         'account_name' => 'accountName',
         'account name' => 'accountName',
         'organization' => 'accountName',
-        
+
         // Job fields
         'title' => 'title',
         'jobtitle' => 'title',
         'job_title' => 'title',
         'job title' => 'title',
         'position' => 'title',
-        
+
         // Address fields
         'website' => 'website',
         'url' => 'website',
@@ -83,7 +83,7 @@ class CsvLeadImportService
         'zip' => 'addressPostalCode',
         'zipcode' => 'addressPostalCode',
         'zip_code' => 'addressPostalCode',
-        
+
         // Other fields
         'description' => 'description',
         'notes' => 'description',
@@ -99,7 +99,9 @@ class CsvLeadImportService
         private EntityManager $entityManager,
         private ServiceContainer $serviceContainer,
         private Log $log
-    ) {}
+        )
+    {
+    }
 
     /**
      * Process a single CsvLeadImport configuration.
@@ -107,23 +109,24 @@ class CsvLeadImportService
     public function processConfig(Entity $config): void
     {
         $csvUrl = $config->get('csvUrl');
-        
+
         if (empty($csvUrl)) {
             throw new RuntimeException('CSV URL is empty');
         }
 
-        $this->log->info('CsvLeadImportService: Starting import from URL: ' . $csvUrl);
+        $this->log->info('CsvLeadImportService: Starting import for config ' . $config->getId() . ' from URL: ' . $csvUrl);
 
         // Fetch CSV content
         $csvContent = $this->fetchCsv($csvUrl);
-        
+
         $this->log->info('CsvLeadImportService: Fetched CSV content, length: ' . strlen($csvContent));
-        
+
         // Parse CSV
         $rows = $this->parseCsv($csvContent);
-        
-        $this->log->info('CsvLeadImportService: Parsed ' . count($rows) . ' rows');
-        
+
+        $totalRows = count($rows);
+        $this->log->info('CsvLeadImportService: Parsed ' . $totalRows . ' total rows from CSV');
+
         if (empty($rows)) {
             $this->updateConfigStatus($config, 0, 'No rows found in CSV');
             return;
@@ -132,25 +135,32 @@ class CsvLeadImportService
         // Get headers if first row is header
         $headers = [];
         $dataStartIndex = 0;
-        
+
         if ($config->get('firstRowIsHeader')) {
             $headers = array_map('trim', $rows[0]);
             $dataStartIndex = 1;
-            $this->log->info('CsvLeadImportService: Headers: ' . implode(', ', $headers));
+        // $this->log->info('CsvLeadImportService: Headers: ' . implode(', ', $headers));
         }
 
         // Get field mapping
         $fieldMapping = $this->getFieldMapping($config, $headers);
 
         // Get last processed row (this is the index of last processed DATA row, 0-indexed relative to data rows)
-        $lastProcessedRow = (int) $config->get('lastProcessedRow');
-        
+        $lastProcessedRow = (int)$config->get('lastProcessedRow');
+
         // Calculate total data rows
-        $totalDataRows = count($rows) - $dataStartIndex;
-        
+        $totalDataRows = $totalRows - $dataStartIndex;
+
         $this->log->info('CsvLeadImportService: Total data rows: ' . $totalDataRows . ', Last processed: ' . $lastProcessedRow);
-        
-        // If we've already processed all rows, nothing to do
+
+        // Handle file truncation or replacement (current file has fewer rows than we previously processed)
+        if ($lastProcessedRow > $totalDataRows) {
+            $this->log->warning("CsvLeadImportService: Detected file truncation or replacement (Last processed: $lastProcessedRow > Total: $totalDataRows). Resetting processed counter to 0.");
+            $lastProcessedRow = 0;
+        // We don't save to DB yet, we'll process from scratch and save at the end
+        }
+
+        // If we've already processed all rows (and didn't just reset), nothing to do
         if ($lastProcessedRow >= $totalDataRows) {
             $this->log->info('CsvLeadImportService: All rows already processed');
             $this->updateConfigStatus($config, 0, null);
@@ -166,30 +176,39 @@ class CsvLeadImportService
         for ($i = $lastProcessedRow; $i < $totalDataRows; $i++) {
             $rowIndex = $dataStartIndex + $i;
             $row = $rows[$rowIndex];
-            
+
             try {
                 $result = $this->processRow($row, $headers, $fieldMapping, $config);
-                
+
                 if ($result === true) {
                     $importedCount++;
-                } else {
+                }
+                else {
                     $skippedCount++;
                 }
-            } catch (Throwable $e) {
+            }
+            catch (Throwable $e) {
                 $errorCount++;
                 $errors[] = "Row " . ($i + 1) . ": " . $e->getMessage();
                 $this->log->warning(
-                    'CsvLeadImportService: Failed to process row ' . ($i + 1) . 
+                    'CsvLeadImportService: Failed to process row ' . ($i + 1) .
                     ': ' . $e->getMessage()
                 );
             }
         }
 
         // Update config with new status
-        $totalImported = (int) $config->get('leadsImportedCount') + $importedCount;
+        $totalImported = (int)$config->get('leadsImportedCount') + $importedCount;
+
+        // If we reset earlier, we should probably recount total imported? 
+        // For now, valid imported count logic is: Old + New. 
+        // If file was replaced, maybe we should have reset imported count too?
+        // User didn't specify, but "resetting imported count" is safer if file is replaced.
+        // However, for now let's just keep incrementing.
+
         $config->set('lastProcessedRow', $totalDataRows);
         $config->set('leadsImportedCount', $totalImported);
-        
+
         $errorMessage = null;
         if (!empty($errors)) {
             $errorMessage = implode("; ", array_slice($errors, 0, 5)); // Limit to 5 errors
@@ -197,11 +216,11 @@ class CsvLeadImportService
                 $errorMessage .= " (and " . (count($errors) - 5) . " more errors)";
             }
         }
-        
+
         $this->updateConfigStatus($config, $importedCount, $errorMessage);
 
         $this->log->info(
-            'CsvLeadImportService: Finished processing config ' . $config->getId() . 
+            'CsvLeadImportService: Finished processing config ' . $config->getId() .
             '. Imported: ' . $importedCount . ', Skipped: ' . $skippedCount . ', Errors: ' . $errorCount
         );
     }
@@ -215,12 +234,18 @@ class CsvLeadImportService
             'timeout' => 30,
             'connect_timeout' => 10,
             'verify' => false, // Allow self-signed certificates
+            'headers' => [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ],
         ]);
 
         try {
             $response = $client->get($url);
-            return (string) $response->getBody();
-        } catch (GuzzleException $e) {
+            return (string)$response->getBody();
+        }
+        catch (GuzzleException $e) {
             throw new RuntimeException('Failed to fetch CSV: ' . $e->getMessage());
         }
     }
@@ -231,26 +256,26 @@ class CsvLeadImportService
     private function parseCsv(string $content): array
     {
         $rows = [];
-        
+
         // Handle different line endings
         $content = str_replace(["\r\n", "\r"], "\n", $content);
         $lines = explode("\n", $content);
-        
+
         foreach ($lines as $line) {
             $line = trim($line);
-            
+
             if (empty($line)) {
                 continue;
             }
-            
+
             // Parse CSV line (handles quoted fields)
             $row = str_getcsv($line);
-            
+
             if (!empty($row)) {
                 $rows[] = $row;
             }
         }
-        
+
         return $rows;
     }
 
@@ -261,7 +286,7 @@ class CsvLeadImportService
     {
         // Check for custom mapping
         $customMapping = $config->get('fieldMapping');
-        
+
         if (!empty($customMapping) && is_array($customMapping)) {
             return $customMapping;
         }
@@ -276,7 +301,7 @@ class CsvLeadImportService
         foreach ($headers as $header) {
             $mapping[$header] = $header;
         }
-        
+
         return $mapping;
     }
 
@@ -288,10 +313,11 @@ class CsvLeadImportService
         array $headers,
         array $fieldMapping,
         Entity $config
-    ): bool {
+        ): bool
+    {
         // Map row data to Lead fields
         $leadData = $this->mapRowToLeadData($row, $headers, $fieldMapping);
-        
+
         if (empty($leadData)) {
             return false;
         }
@@ -300,11 +326,11 @@ class CsvLeadImportService
         if ($config->get('assignedUserId')) {
             $leadData['assignedUserId'] = $config->get('assignedUserId');
         }
-        
+
         if ($config->get('teamId')) {
             $leadData['teamsIds'] = [$config->get('teamId')];
         }
-        
+
         if ($config->get('leadSource')) {
             $leadData['source'] = $config->get('leadSource');
         }
@@ -312,7 +338,7 @@ class CsvLeadImportService
         // Check for duplicates
         if ($config->get('skipDuplicates')) {
             $duplicateCheckFields = $config->get('duplicateCheckFields') ?? ['emailAddress'];
-            
+
             if ($this->isDuplicate($leadData, $duplicateCheckFields)) {
                 return false;
             }
@@ -328,10 +354,10 @@ class CsvLeadImportService
     private function mapRowToLeadData(array $row, array $headers, array $fieldMapping): array
     {
         $leadData = [];
-        
+
         foreach ($row as $index => $value) {
             $value = trim($value);
-            
+
             if (empty($value)) {
                 continue;
             }
@@ -339,16 +365,18 @@ class CsvLeadImportService
             // Get column name (from headers or by index)
             $columnName = isset($headers[$index]) ? $headers[$index] : "column_$index";
             $columnNameLower = strtolower(trim($columnName));
-            
+
             // Find the Lead field for this column
             $leadField = null;
-            
+
             // Check exact match first
             if (isset($fieldMapping[$columnName])) {
                 $leadField = $fieldMapping[$columnName];
-            } elseif (isset($fieldMapping[$columnNameLower])) {
+            }
+            elseif (isset($fieldMapping[$columnNameLower])) {
                 $leadField = $fieldMapping[$columnNameLower];
-            } else {
+            }
+            else {
                 // Check lowercase mapping
                 foreach ($fieldMapping as $mapKey => $mapValue) {
                     if (strtolower($mapKey) === $columnNameLower) {
@@ -357,7 +385,7 @@ class CsvLeadImportService
                     }
                 }
             }
-            
+
             if ($leadField) {
                 $leadData[$leadField] = $value;
             }
@@ -380,13 +408,13 @@ class CsvLeadImportService
     private function isDuplicate(array $leadData, array $checkFields): bool
     {
         $where = [];
-        
+
         foreach ($checkFields as $field) {
             if (isset($leadData[$field]) && !empty($leadData[$field])) {
                 $where[$field] = $leadData[$field];
             }
         }
-        
+
         if (empty($where)) {
             return false;
         }
@@ -406,23 +434,24 @@ class CsvLeadImportService
     {
         try {
             $lead = $this->entityManager->getNewEntity('Lead');
-            
+
             foreach ($data as $field => $value) {
                 $lead->set($field, $value);
             }
-            
+
             // Set default status if not provided
             if (!$lead->get('status')) {
                 $lead->set('status', 'New');
             }
-            
+
             $this->entityManager->saveEntity($lead);
-            
+
             return true;
-        } catch (Throwable $e) {
+        }
+        catch (Throwable $e) {
             $this->log->error(
                 'CsvLeadImportService: Failed to create lead: ' . $e->getMessage(),
-                ['data' => $data]
+            ['data' => $data]
             );
             return false;
         }
@@ -435,7 +464,7 @@ class CsvLeadImportService
     {
         $config->set('lastRunAt', date('Y-m-d H:i:s'));
         $config->set('lastError', $error);
-        
+
         $this->entityManager->saveEntity($config);
     }
 
@@ -445,18 +474,18 @@ class CsvLeadImportService
     public function runManualImport(string $configId): array
     {
         $config = $this->entityManager->getEntityById('CsvLeadImport', $configId);
-        
+
         if (!$config) {
             throw new RuntimeException('Config not found');
         }
 
-        $previousCount = (int) $config->get('leadsImportedCount');
-        
+        $previousCount = (int)$config->get('leadsImportedCount');
+
         $this->processConfig($config);
-        
+
         $config = $this->entityManager->getEntityById('CsvLeadImport', $configId);
-        $newCount = (int) $config->get('leadsImportedCount');
-        
+        $newCount = (int)$config->get('leadsImportedCount');
+
         return [
             'success' => true,
             'imported' => $newCount - $previousCount,
@@ -470,7 +499,7 @@ class CsvLeadImportService
     public function resetCounter(string $configId): void
     {
         $config = $this->entityManager->getEntityById('CsvLeadImport', $configId);
-        
+
         if (!$config) {
             throw new RuntimeException('Config not found');
         }
@@ -478,7 +507,7 @@ class CsvLeadImportService
         $config->set('lastProcessedRow', 0);
         $config->set('leadsImportedCount', 0);
         $config->set('lastError', null);
-        
+
         $this->entityManager->saveEntity($config);
     }
 }
