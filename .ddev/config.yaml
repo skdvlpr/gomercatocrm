@@ -13,6 +13,18 @@ use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
 corepack_enable: false
+hooks:
+  post-start:
+    - exec: |
+        if [ -f /var/www/html/data/config.php ] && grep -q "database" /var/www/html/data/config.php; then
+          echo 'EspoCRM is installed, running maintenance...'
+          php /var/www/html/clear_cache.php || echo 'Cache clear failed '
+          php /var/www/html/bin/command ensureScheduledJobs && echo 'Scheduled jobs configured!' || echo 'Scheduled jobs setup skipped'
+        else
+        echo 'Set permissions to avoid errors...'
+        cd /var/www/html && find data -type d -exec chmod 775 {} + && chown -R 1000:1000 .;
+          echo 'EspoCRM not fully installed yet - run installer'
+        fi
 
 # Key features of DDEV's config.yaml:
 
@@ -288,13 +300,3 @@ corepack_enable: false
 # See https://docs.ddev.com/en/stable/users/extend/custom-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
-hooks:
-  post-start:
-    - exec: |
-        if [ -f /var/www/html/data/config.php ] && grep -q "database" /var/www/html/data/config.php; then
-          echo 'EspoCRM is installed, running maintenance...'
-          php /var/www/html/clear_cache.php && echo 'Cache cleared!' || echo 'Cache clear failed (non-critical)'
-          php /var/www/html/bin/command ensureScheduledJobs && echo 'Scheduled jobs configured!' || echo 'Scheduled jobs setup skipped'
-        else
-          echo 'EspoCRM not fully installed yet - run installer at https://gomercatocrm.ddev.site'
-        fi
