@@ -1,0 +1,24 @@
+services:
+  whatsapp-api:
+    container_name: ddev-${DDEV_SITENAME}-whatsapp-api
+    image: avoylenko/wwebjs-api:latest
+    restart: unless-stopped
+    ports:
+      - "3000"
+    environment:
+      - API_KEY=espocrm-secret-key
+      - BASE_WEBHOOK_URL=http://web/api/v1/WhatsApp/action/webhook
+      - MAX_ATTACHMENT_SIZE=10000000
+      - ENABLE_LOCAL_CALLBACK_EXAMPLE=FALSE
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=3000:3000
+    volumes:
+      - whatsapp-sessions:/app/.wwebjs_auth
+      - whatsapp-cache:/app/.wwebjs_cache
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+
+volumes:
+  whatsapp-sessions:
+  whatsapp-cache:

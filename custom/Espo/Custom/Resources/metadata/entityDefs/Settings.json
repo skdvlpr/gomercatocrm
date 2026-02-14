@@ -1,0 +1,24 @@
+{
+  "fields": {
+    "whatsappApiKey": {
+      "type": "varchar",
+      "tooltip": true,
+      "required": false
+    },
+    "whatsappApiUrl": {
+      "type": "url",
+      "default": "http://whatsapp-api:3000",
+      "required": true,
+      "tooltip": true
+    },
+    "whatsappAutoMessageEnabled": {
+      "type": "bool",
+      "default": false
+    },
+    "whatsappLeadTemplate": {
+      "type": "text",
+      "tooltip": true,
+      "default": "Ciao {name}! Grazie per il tuo interesse. Ti contatteremo presto."
+    }
+  }
+}

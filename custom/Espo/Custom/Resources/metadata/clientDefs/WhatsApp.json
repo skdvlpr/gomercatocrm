@@ -1,0 +1,6 @@
+{
+    "controller": "custom:controllers/whatsapp",
+    "menu": {
+        "handler": false
+    }
+}

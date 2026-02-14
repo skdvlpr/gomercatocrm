@@ -1,18 +1,83 @@
 [
-    {
-        "route": "/CsvLeadImport/:id/runImport",
-        "method": "post",
-        "params": {
-            "controller": "CsvLeadImport",
-            "action": "runImport"
-        }
-    },
-    {
-        "route": "/CsvLeadImport/:id/resetCounter",
-        "method": "post",
-        "params": {
-            "controller": "CsvLeadImport",
-            "action": "resetCounter"
-        }
+  {
+    "route": "/WhatsApp/action/login",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "login"
     }
+  },
+  {
+    "route": "/WhatsApp/action/qrCode",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "qrCode"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/status",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "status"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/getChats",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "getChats"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/getChatMessages",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "getChatMessages"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/getContacts",
+    "method": "get",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "getContacts"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/logout",
+    "method": "post",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "logout"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/sendMessage",
+    "method": "post",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "sendMessage"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/saveSettings",
+    "method": "post",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "saveSettings"
+    }
+  },
+  {
+    "route": "/WhatsApp/action/webhook",
+    "method": "post",
+    "params": {
+      "controller": "WhatsApp",
+      "action": "webhook"
+    },
+    "noAuth": true
+  }
 ]

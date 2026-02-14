@@ -1,13 +1,12 @@
 {
-    "integrations": {
-        "itemList": [
-            "__APPEND__",
-            {
-                "url": "#CsvLeadImport",
-                "label": "CSV Lead Import",
-                "iconClass": "fas fa-file-csv",
-                "description": "csvLeadImport"
-            }
-        ]
-    }
+  "integrations": {
+    "label": "Integrations",
+    "itemList": [
+      {
+        "url": "#WhatsApp/setup",
+        "label": "WhatsApp Integration",
+        "description": "Configure WhatsApp API settings"
+      }
+    ]
+  }
 }
