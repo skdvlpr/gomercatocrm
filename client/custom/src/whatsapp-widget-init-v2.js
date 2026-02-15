@@ -32,7 +32,7 @@
     if (!document.querySelector('link[href*="whatsapp-widget.css"]')) {
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'client/custom/css/whatsapp-widget.css';
+        link.href = 'client/custom/css/whatsapp-widget.css?v=' + new Date().getTime();
         document.head.appendChild(link);
     }
 
@@ -48,7 +48,7 @@
         return d.innerHTML;
     }
 
-    function $(id) { return document.getElementById(id); }
+    function _$(id) { return document.getElementById(id); }
 
     function formatTime(ts) {
         if (!ts) return '';
@@ -65,107 +65,42 @@
     }
 
     /* ── UI Building ────────────────────────────────────────────── */
-    function buildButton() {
-        if ($('whatsapp-floating-btn')) return;
-        var btn = document.createElement('button');
-        btn.className = 'whatsapp-floating-btn';
-        btn.id = 'whatsapp-floating-btn';
-        btn.innerHTML = WA_SVG + '<span class="wa-status-dot disconnected" id="wa-status-dot"></span>';
-        btn.style.display = 'none'; // Hidden until status check confirms enabled
-        document.body.appendChild(btn);
-
-        btn.addEventListener('click', function () {
-            if (!state.panelBuilt) buildPanel();
-            toggle();
-        });
-    }
-
-    function buildPanel() {
-        if (state.panelBuilt) return;
-        state.panelBuilt = true;
-
-        var div = document.createElement('div');
-        div.id = 'wa-panel-root';
-        div.innerHTML = [
-            '<div class="whatsapp-widget-panel" id="wa-panel">',
-            '  <div class="wa-panel-header">',
-            '    <button class="wa-back-btn" id="wa-back-btn">\u2190</button>',
-            '    <div style="flex:1">',
-            '      <div class="wa-title" id="wa-panel-title">WhatsApp</div>',
-            '      <div class="wa-status-text" id="wa-panel-status">Checking\u2026</div>',
-            '    </div>',
-            '    <div class="wa-header-actions" id="wa-header-actions"></div>',
-            '    <button class="wa-logout-btn" id="wa-logout-btn" title="Logout" style="display:none">\u23FB</button>',
-            '    <button class="wa-close-btn" id="wa-close-btn">\u2715</button>',
-            '  </div>',
-            '',
-            '  <div class="wa-screen active" id="wa-screen-login">',
-            '    <div class="wa-login-screen">',
-            '      <div class="wa-login-title">Connect WhatsApp</div>',
-            '      <div class="wa-login-desc">Click Connect to display QR code.</div>',
-            '      <button class="wa-connect-btn" id="wa-connect-btn">Connect</button>',
-            '      <div id="wa-qr-area" style="display:none">',
-            '        <div class="wa-spinner" id="wa-qr-spinner"></div>',
-            '        <div class="wa-qr-container" id="wa-qr-container" style="display:none">',
-            '          <img id="wa-qr-img" style="width:240px;height:240px" alt="QR Code">',
-            '        </div>',
-            '        <div class="wa-login-desc" style="margin-top:12px">Open WhatsApp > Linked Devices > Link a Device</div>',
-            '      </div>',
-            '    </div>',
-            '  </div>',
-            '',
-            '  <div class="wa-screen" id="wa-screen-chatList">',
-            '    <div class="wa-search-bar"><input type="text" id="wa-search-input" placeholder="Search chats\u2026"></div>',
-            '    <div class="wa-panel-body"><ul class="wa-chat-list" id="wa-chat-list"></ul></div>',
-            '  </div>',
-            '',
-            '  <div class="wa-screen" id="wa-screen-contacts">',
-            '    <div class="wa-panel-body"><ul class="wa-contacts-list" id="wa-contacts-list"></ul></div>',
-            '  </div>',
-            '',
-            '  <div class="wa-screen" id="wa-screen-chat">',
-            '    <div class="wa-messages-container" id="wa-messages-container"></div>',
-            '    <div class="wa-send-box">',
-            '      <input type="text" id="wa-message-input" placeholder="Type a message\u2026">',
-            '      <button class="wa-send-btn" id="wa-send-btn">' + SEND_SVG + '</button>',
-            '    </div>',
-            '  </div>',
-            '</div>'
-        ].join('\n');
-        document.body.appendChild(div);
-
-        $('wa-close-btn').onclick = function () { close(); };
-        $('wa-back-btn').onclick = function () { 
-            if (state.screen === 'chat' || state.screen === 'contacts') showScreen('chatList'); 
-        };
-        $('wa-logout-btn').onclick = function () { logout(); };
-        $('wa-connect-btn').onclick = function () { startSession(); };
-        $('wa-send-btn').onclick = function () { sendMessage(); };
-        $('wa-message-input').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-        });
-        $('wa-search-input').addEventListener('input', function (e) { filterChats(e.target.value); });
-    }
 
     /* ── Navigation ──────────────────────────────────────────────── */
-    function toggle() { state.isOpen ? close() : open(); }
+    function toggle() { console.log('WA: Toggle called'); state.isOpen ? close() : open(); }
     
     function open() {
+        console.log('WA: Open called');
         state.isOpen = true;
-        var p = $('wa-panel');
-        if (p) p.classList.add('open');
+        var p = _$('wa-panel-root');
+        if (p) {
+            p.classList.add('open');
+            // Safety styling
+            p.style.opacity = '1'; 
+            p.style.pointerEvents = 'auto';
+            p.style.transform = 'translateY(0)';
+        } else {
+            console.error('WA: Panel root not found!');
+        }
+        updateTheme();
         checkStatus();
         startPolling();
     }
 
     function close() {
+        console.log('WA: Close called');
         state.isOpen = false;
-        var p = $('wa-panel');
-        if (p) p.classList.remove('open');
+        var p = _$('wa-panel-root');
+        if (p) {
+            p.classList.remove('open');
+            p.style.opacity = ''; // Reset
+            p.style.pointerEvents = '';
+        }
         stopPolling();
     }
 
     function showScreen(name) {
+        console.log('WA: Showing screen', name, 'Last:', state.lastScreen);
         state.lastScreen = state.screen;
         state.screen = name;
 
@@ -173,13 +108,13 @@
         var screens = document.querySelectorAll('#wa-panel .wa-screen');
         for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
         
-        var active = $('wa-screen-' + name);
+        var active = _$('wa-screen-' + name);
         if (active) active.classList.add('active');
 
         // Header Elements Management
-        var backBtn = $('wa-back-btn');
-        var newChatBtn = $('wa-btn-new-chat');
-        var refreshQrBtn = $('wa-btn-refresh-qr');
+        var backBtn = _$('wa-back-btn');
+        var newChatBtn = _$('wa-btn-new-chat');
+        var refreshQrBtn = _$('wa-btn-refresh-qr');
         
         if (backBtn) {
             backBtn.style.display = (name === 'chat' || name === 'contacts') ? 'flex' : 'none';
@@ -196,9 +131,9 @@
         }
 
         // Title update
-        var title = $('wa-panel-title');
+        var title = _$('wa-panel-title');
         if (title) {
-             $('wa-panel-title').textContent = (name === 'chat' ? (state.chatName || 'Chat') : (name === 'contacts' ? 'Select Contact' : 'WhatsApp'));
+             _$('wa-panel-title').textContent = (name === 'chat' ? (state.chatName || 'Chat') : (name === 'contacts' ? 'Select Contact' : 'WhatsApp'));
         }
 
         if (name !== 'chatList' && state.chatInterval) {
@@ -213,7 +148,7 @@
             state.status = r.status || 'disconnected';
             config.enabled = r.enabled !== false;
 
-            var btn = $('whatsapp-floating-btn');
+            var btn = _$('whatsapp-floating-btn');
             if (btn) btn.style.display = config.enabled ? 'flex' : 'none';
             if (!config.enabled && state.isOpen) close();
 
@@ -226,7 +161,7 @@
 
             if (isConnected) {
                 // FORCE switch if we are on the login screen or if the visual state is wrong
-                var loginScreen = $('wa-screen-login');
+                var loginScreen = _$('wa-screen-login');
                 if (state.screen === 'login' || (loginScreen && loginScreen.classList.contains('active'))) {
                     console.log('WhatsApp Widget: Auto-switching to chatList (Forced)');
                     showScreen('chatList');
@@ -258,7 +193,7 @@
     }
 
     function updateStatusUI() {
-        var el = $('wa-panel-status');
+        var el = _$('wa-panel-status');
         var s = (state.status || '').toUpperCase();
         var connected = s === 'AUTHENTICATED' || s === 'CONNECTED';
         
@@ -266,10 +201,10 @@
             el.textContent = connected ? '\u25cf Connected' : ('\u25cb ' + (state.status || 'Disconnected'));
             el.className = 'wa-status-text' + (connected ? ' connected' : '');
         }
-        var dot = $('wa-status-dot');
+        var dot = _$('wa-status-dot');
         if (dot) dot.className = 'wa-status-dot ' + (connected ? 'connected' : 'disconnected');
         
-        var logoutBtn = $('wa-logout-btn');
+        var logoutBtn = _$('wa-logout-btn');
         if (logoutBtn) logoutBtn.style.display = connected ? 'block' : 'none';
     }
 
@@ -296,53 +231,69 @@
 
     /* ── Session / QR ───────────────────────────────────────────── */
     function startSession() {
-        var btn = $('wa-connect-btn');
-        var area = $('wa-qr-area');
-        var spinner = $('wa-qr-spinner');
-        var qrc = $('wa-qr-container');
+        if (state.sessionStarting) return;
+        state.sessionStarting = true;
+
+        if (state.qrPollTimeout) { clearTimeout(state.qrPollTimeout); state.qrPollTimeout = null; }
+
+        var btn = _$('wa-connect-btn');
+        var area = _$('wa-qr-area'); // Note: area id might need check if removed from HTML, but we kept structure
+        var spinner = _$('wa-qr-spinner');
+        var qrc = _$('wa-qr-container');
 
         if (btn) { btn.disabled = true; btn.textContent = 'Connecting\u2026'; }
-        if (area) area.style.display = 'block';
         if (spinner) spinner.style.display = 'block';
         if (qrc) qrc.style.display = 'none';
 
         api('GET', 'WhatsApp/action/login').then(function () {
-            setTimeout(function() { pollQR(0); }, 2000);
+            // Wait a bit for puppeteer to init
+            state.qrPollTimeout = setTimeout(function() { pollQR(0); }, 2000);
         }).catch(function () {
+             state.sessionStarting = false;
             if (btn) { btn.disabled = false; btn.textContent = 'Retry'; }
             if (typeof Espo !== 'undefined' && Espo.Ui) Espo.Ui.error('Failed to connect');
         });
     }
 
     function pollQR(attempts) {
-        if (!state.isOpen || attempts > 60) return; // 2 mins timeout
+        if (!state.isOpen || attempts > 60) {
+            state.sessionStarting = false;
+            var btn = _$('wa-connect-btn');
+            if (btn) { btn.disabled = false; btn.textContent = 'Regenerate QR'; }
+            return; 
+        }
 
         api('GET', 'WhatsApp/action/qrCode').then(function (r) {
             if (r.qrImage) {
-                var img = $('wa-qr-img');
+                var img = _$('wa-qr-img');
                 if (img) img.src = r.qrImage;
-                if ($('wa-qr-container')) $('wa-qr-container').style.display = 'block';
-                if ($('wa-qr-spinner')) $('wa-qr-spinner').style.display = 'none';
-                if ($('wa-connect-btn')) $('wa-connect-btn').style.display = 'none';
+                if (_$('wa-qr-container')) _$('wa-qr-container').style.display = 'flex'; // Flex to center img
+                if (_$('wa-qr-spinner')) _$('wa-qr-spinner').style.display = 'none';
+                if (_$('wa-connect-btn')) _$('wa-connect-btn').style.display = 'none';
                 
-                // Keep polling status in background to detect scan success
-                // api('GET', 'WhatsApp/action/status').then(...) handled by main poller or we can do it here
-                setTimeout(function() { pollQR(attempts + 1); }, 3000); 
+                // Keep polling
+                state.qrPollTimeout = setTimeout(function() { pollQR(attempts + 1); }, 3000); 
             } else {
-                 // Maybe connected?
+                 // No QR image? Maybe connected or not ready yet.
                  api('GET', 'WhatsApp/action/status').then(function(s) {
-                     if (s.isConnected) {
+                     var isConnected = s.isConnected || 
+                                       s.status === 'CONNECTED' || 
+                                       s.status === 'AUTHENTICATED';
+
+                     if (isConnected) {
+                         state.sessionStarting = false;
                          state.status = s.status;
                          updateStatusUI();
                          showScreen('chatList');
                          loadChats();
                      } else {
-                         setTimeout(function() { pollQR(attempts + 1); }, 2000);
+                         // Not connected yet, maybe initializing
+                         state.qrPollTimeout = setTimeout(function() { pollQR(attempts + 1); }, 2000);
                      }
                  });
             }
         }).catch(function() {
-            setTimeout(function() { pollQR(attempts + 1); }, 3000);
+            state.qrPollTimeout = setTimeout(function() { pollQR(attempts + 1); }, 3000);
         });
     }
 
@@ -356,7 +307,7 @@
 
     function loadContacts() {
         showScreen('contacts');
-        var list = $('wa-contacts-list');
+        var list = _$('wa-contacts-list');
         if (list) list.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
         api('GET', 'WhatsApp/action/getContacts').then(function(r) {
             state.contacts = r.list || [];
@@ -369,7 +320,7 @@
         state.chatName = chatName;
         showScreen('chat');
 
-        var container = $('wa-messages-container');
+        var container = _$('wa-messages-container');
         if (container) container.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
 
         api('GET', 'WhatsApp/action/getChatMessages', { chatId: chatId, limit: 50 }).then(function (r) {
@@ -385,7 +336,7 @@
     }
 
     function fallbackToLastMessage(chatId) {
-        var container = $('wa-messages-container');
+        var container = _$('wa-messages-container');
         if (!container) return;
         var chat = state.chats.find(function(c) { return (c.id._serialized || c.id) === chatId; });
         
@@ -412,12 +363,12 @@
     }
 
     function sendMessage() {
-        var input = $('wa-message-input');
+        var input = _$('wa-message-input');
         var text = input ? input.value.trim() : '';
         if (!text || !state.chatId) return;
         input.value = '';
 
-        var container = $('wa-messages-container');
+        var container = _$('wa-messages-container');
         var now = new Date();
         var msgEl = document.createElement('div');
         msgEl.className = 'wa-message outgoing';
@@ -432,11 +383,11 @@
 
     /* ── Renderers ──────────────────────────────────────────────── */
     function renderChatList(chats) {
-        var el = $('wa-chat-list');
+        var el = _$('wa-chat-list');
         if (!el) return;
         if (!chats.length) { el.innerHTML = '<div class="wa-empty-state"><p>No chats</p></div>'; return; }
 
-        var q = ($('wa-search-input') || {}).value || '';
+        var q = (_$('wa-search-input') || {}).value || '';
         if (q) {
              q = q.toLowerCase();
              chats = chats.filter(function(c) {
@@ -465,7 +416,7 @@
     }
 
     function renderContacts(contacts) {
-        var el = $('wa-contacts-list');
+        var el = _$('wa-contacts-list');
         if (!el) return;
         if (!contacts.length) { el.innerHTML = '<div class="wa-empty-state"><p>No contacts</p></div>'; return; }
         
@@ -485,7 +436,7 @@
     }
 
     function renderMessages(msgs) {
-        var container = $('wa-messages-container');
+        var container = _$('wa-messages-container');
         if (!container) return;
         var sorted = msgs.slice().sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
         var html = '';
@@ -503,7 +454,7 @@
     /* ── Theme Detection ────────────────────────────────────────── */
     /* ── Theme Detection ────────────────────────────────────────── */
     function updateTheme() {
-        var panel = $('wa-panel-root');
+        var panel = _$('wa-panel-root');
         if (!panel) return;
         
         // Check LocalStorage first
@@ -535,7 +486,7 @@
     }
 
     function toggleTheme() {
-        var panel = $('wa-panel-root');
+        var panel = _$('wa-panel-root');
         var isDark = panel.classList.contains('wa-dark');
         if (isDark) {
             // Switch to Light
@@ -552,7 +503,7 @@
 
     /* ── UI Building ────────────────────────────────────────────── */
     function buildButton() {
-        if ($('whatsapp-floating-btn')) return;
+        if (_$('whatsapp-floating-btn')) return;
         var btn = document.createElement('button');
         btn.className = 'whatsapp-floating-btn';
         btn.id = 'whatsapp-floating-btn';
@@ -626,7 +577,7 @@
             '  <div class="wa-screen" id="wa-screen-chat">',
             '     <div class="wa-messages-container" id="wa-messages-container"></div>',
             '     <div class="wa-send-box">',
-            '        <input type="text" id="wa-message-input" placeholder="Type a message\u2026">',
+            '        <input type="text" id="wa-message-input" autocomplete="off" placeholder="Type a message\u2026">',
             '        <button class="wa-send-btn" id="wa-send-btn">' + SEND_SVG + '</button>',
             '     </div>',
             '  </div>',
@@ -701,27 +652,34 @@
         });
 
         // Event Listeners
-        var closeBtn = $('wa-close-btn'); if(closeBtn) closeBtn.onclick = close;
-        var connBtn = $('wa-connect-btn'); if(connBtn) connBtn.onclick = function() { startSession(); };
-        var refBtn = $('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
-        var backBtn = $('wa-back-btn'); if(backBtn) backBtn.onclick = function() { showScreen(state.lastScreen || 'chatList'); };
-        var sendBtn = $('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
-        var msgInput = $('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
-        var lootBtn = $('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { api('POST', 'WhatsApp/action/logout').then(function() { 
+        var closeBtn = _$('wa-close-btn'); if(closeBtn) closeBtn.onclick = close;
+        var connBtn = _$('wa-connect-btn'); if(connBtn) connBtn.onclick = function() { startSession(); };
+        var refBtn = _$('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
+        var backBtn = _$('wa-back-btn'); 
+        if(backBtn) {
+            backBtn.onclick = function() { 
+                console.log('WA: Back button clicked');
+                // Always go back to chatList from sub-screens
+                showScreen('chatList'); 
+            };
+        }
+        var sendBtn = _$('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
+        var msgInput = _$('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
+        var lootBtn = _$('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { api('POST', 'WhatsApp/action/logout').then(function() { 
              state.status = 'DISCONNECTED'; checkStatus(); 
         }); };
-        var searchInp = $('wa-search-input'); if(searchInp) searchInp.onkeyup = function(e) { filterList('wa-chat-list', e.target.value); };
+        var searchInp = _$('wa-search-input'); if(searchInp) searchInp.onkeyup = function(e) { filterList('wa-chat-list', e.target.value); };
         
         // New Chat Button (in Header)
-        var newChatBtn = $('wa-btn-new-chat'); 
+        var newChatBtn = _$('wa-btn-new-chat'); 
         if(newChatBtn) newChatBtn.onclick = function() { showScreen('contacts'); loadContacts(); };
         
         // Contact Search
-        var contSearch = $('wa-contact-search'); 
+        var contSearch = _$('wa-contact-search'); 
         if(contSearch) contSearch.onkeyup = function(e) { filterList('wa-contacts-list', e.target.value); };
         
         // Theme Toggle
-        var themeBtn = $('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
+        var themeBtn = _$('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
 
         // Ensure updateTheme checks immediately after build
         setTimeout(updateTheme, 0);
@@ -730,28 +688,6 @@
     /* ── Renderers ──────────────────────────────────────────────── */
     // ... existing renderer functions ...
 
-    function toggle() {
-        var root = $('wa-panel-root');
-        if (state.isOpen) close(); else open();
-    }
-
-    function open() {
-        state.isOpen = true;
-        var root = $('wa-panel-root');
-        if (root) root.classList.add('open');
-        updateTheme();
-        if (state.chats.length === 0 && (state.status === 'CONNECTED' || state.status === 'AUTHENTICATED')) {
-             checkStatus(); 
-        } else {
-             checkStatus();
-        }
-    }
-
-    function close() {
-        state.isOpen = false;
-        var root = $('wa-panel-root');
-        if (root) root.classList.remove('open');
-    }
 
     /* ── Init ───────────────────────────────────────────────────── */
     function init() {
@@ -766,7 +702,7 @@
         // Check status
         api('GET', 'WhatsApp/action/status').then(function(r) {
              config.enabled = r.enabled !== false;
-             var btn = $('whatsapp-floating-btn');
+             var btn = _$('whatsapp-floating-btn');
              if (btn) btn.style.display = config.enabled ? 'flex' : 'none';
              if (config.enabled) {
                  checkStatus();
@@ -781,7 +717,7 @@
         setTimeout(init, 1000);
     }
     window.addEventListener('hashchange', function() { if (!state.initialized) init(); else {
-        if (config.enabled && !$('whatsapp-floating-btn')) buildButton();
+        if (config.enabled && !_$('whatsapp-floating-btn')) buildButton();
         updateTheme();
     }});
     
