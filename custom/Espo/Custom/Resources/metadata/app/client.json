@@ -1,6 +1,6 @@
 {
     "scriptList": [
         "__APPEND__",
-        "client/custom/src/whatsapp-widget-init-v2.js"
+        "client/custom/src/whatsapp-widget-init.js"
     ]
 }

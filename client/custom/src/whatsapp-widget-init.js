@@ -67,10 +67,9 @@
     /* ── UI Building ────────────────────────────────────────────── */
 
     /* ── Navigation ──────────────────────────────────────────────── */
-    function toggle() { console.log('WA: Toggle called'); state.isOpen ? close() : open(); }
+    function toggle() { state.isOpen ? close() : open(); }
     
     function open() {
-        console.log('WA: Open called');
         state.isOpen = true;
         var p = _$('wa-panel-root');
         if (p) {
@@ -88,7 +87,6 @@
     }
 
     function close() {
-        console.log('WA: Close called');
         state.isOpen = false;
         var p = _$('wa-panel-root');
         if (p) {
@@ -100,7 +98,6 @@
     }
 
     function showScreen(name) {
-        console.log('WA: Showing screen', name, 'Last:', state.lastScreen);
         state.lastScreen = state.screen;
         state.screen = name;
 
@@ -163,7 +160,6 @@
                 // FORCE switch if we are on the login screen or if the visual state is wrong
                 var loginScreen = _$('wa-screen-login');
                 if (state.screen === 'login' || (loginScreen && loginScreen.classList.contains('active'))) {
-                    console.log('WhatsApp Widget: Auto-switching to chatList (Forced)');
                     showScreen('chatList');
                     loadChats();
                 } else if (!state.screen || state.screen === '') {
@@ -178,7 +174,6 @@
             } else {
                 // If disconnected and NOT on login, switch to login
                 if (state.screen !== 'login') {
-                     console.log('WhatsApp Widget: Disconnected, switching to login');
                      showScreen('login');
                 }
                 
@@ -418,6 +413,16 @@
     function renderContacts(contacts) {
         var el = _$('wa-contacts-list');
         if (!el) return;
+        
+        var q = (_$('wa-contact-search') || {}).value || '';
+        if (q) {
+             q = q.toLowerCase();
+             contacts = contacts.filter(function(c) {
+                 var n = (c.name || c.pushname || c.number || '').toLowerCase();
+                 return n.indexOf(q) !== -1;
+             });
+        }
+
         if (!contacts.length) { el.innerHTML = '<div class="wa-empty-state"><p>No contacts</p></div>'; return; }
         
         el.innerHTML = contacts.map(function(c) {
@@ -569,7 +574,7 @@
 
             '  <div class="wa-screen" id="wa-screen-chatList">',
             '     <div class="wa-search-bar">',
-            '       <input type="text" id="wa-search-input" placeholder="Search chats \u2026">',
+            '       <input type="text" id="wa-search-input" autocomplete="off" placeholder="Search chats \u2026">',
             '     </div>', 
             '     <div class="wa-panel-body" id="wa-chat-list"></div>',
             '  </div>',
@@ -584,7 +589,7 @@
             
             '  <div class="wa-screen" id="wa-screen-contacts">',
             '      <div class="wa-search-bar">', // Added search for contacts too?
-            '         <input type="text" id="wa-contact-search" placeholder="Search contacts \u2026">',
+            '         <input type="text" id="wa-contact-search" autocomplete="off" placeholder="Search contacts \u2026">',
             '      </div>',
             '      <div class="wa-panel-body" id="wa-contacts-list"></div>',
             '  </div>',
@@ -657,18 +662,20 @@
         var refBtn = _$('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
         var backBtn = _$('wa-back-btn'); 
         if(backBtn) {
+        var backBtn = _$('wa-back-btn'); 
+        if(backBtn) {
             backBtn.onclick = function() { 
-                console.log('WA: Back button clicked');
                 // Always go back to chatList from sub-screens
                 showScreen('chatList'); 
             };
+        }
         }
         var sendBtn = _$('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
         var msgInput = _$('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
         var lootBtn = _$('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { api('POST', 'WhatsApp/action/logout').then(function() { 
              state.status = 'DISCONNECTED'; checkStatus(); 
         }); };
-        var searchInp = _$('wa-search-input'); if(searchInp) searchInp.onkeyup = function(e) { filterList('wa-chat-list', e.target.value); };
+        var searchInp = _$('wa-search-input'); if(searchInp) searchInp.onkeyup = function() { renderChatList(state.chats); };
         
         // New Chat Button (in Header)
         var newChatBtn = _$('wa-btn-new-chat'); 
@@ -676,7 +683,7 @@
         
         // Contact Search
         var contSearch = _$('wa-contact-search'); 
-        if(contSearch) contSearch.onkeyup = function(e) { filterList('wa-contacts-list', e.target.value); };
+        if(contSearch) contSearch.onkeyup = function() { renderContacts(state.contacts); };
         
         // Theme Toggle
         var themeBtn = _$('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
@@ -691,7 +698,6 @@
 
     /* ── Init ───────────────────────────────────────────────────── */
     function init() {
-        console.log('WhatsApp Widget: Init called');
         if (state.initialized) return;
         if (typeof Espo === 'undefined' || !Espo.Ajax || !document.body) {
             setTimeout(init, 500); return;

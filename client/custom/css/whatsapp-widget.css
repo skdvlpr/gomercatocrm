@@ -276,6 +276,12 @@
 
 /* Chat List Search */
 .wa-search-bar { padding: 8px 12px; background: var(--wa-bg-panel); border-bottom: 1px solid var(--wa-border); }
+.wa-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
 #wa-search-input, #wa-contact-search {
     width: 100%;
     background-color: var(--wa-header-bg);
