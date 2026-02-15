@@ -166,41 +166,39 @@
     }
 
     function showScreen(name) {
+        state.lastScreen = state.screen;
         state.screen = name;
+
+        // Hide all screens
         var screens = document.querySelectorAll('#wa-panel .wa-screen');
         for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
-        var t = $('wa-screen-' + name);
-        if (t) t.classList.add('active');
+        
+        var active = $('wa-screen-' + name);
+        if (active) active.classList.add('active');
 
-        var back = $('wa-back-btn');
-        if (back) back.className = 'wa-back-btn' + (name === 'chat' || name === 'contacts' ? ' visible' : '');
-
-        var title = $('wa-panel-title');
-        if (title) {
-            if (name === 'chat') title.textContent = state.chatName || 'Chat';
-            else if (name === 'contacts') title.textContent = 'Contacts';
-            else title.textContent = 'WhatsApp';
+        // Header Elements Management
+        var backBtn = $('wa-back-btn');
+        var newChatBtn = $('wa-btn-new-chat');
+        var refreshQrBtn = $('wa-btn-refresh-qr');
+        
+        if (backBtn) {
+            backBtn.style.display = (name === 'chat' || name === 'contacts') ? 'flex' : 'none';
+        }
+        
+        if (newChatBtn) {
+            // Only show New Chat button on Chat List screen
+            newChatBtn.style.display = (name === 'chatList') ? 'flex' : 'none';
         }
 
-        var actions = $('wa-header-actions');
-        if (actions) {
-            actions.innerHTML = '';
-            if (name === 'chatList') {
-                var cBtn = document.createElement('button');
-                cBtn.className = 'wa-icon-btn';
-                cBtn.innerHTML = '+'; 
-                cBtn.title = 'New Chat';
-                cBtn.onclick = function() { loadContacts(); };
-                actions.appendChild(cBtn);
-            }
-            if (name === 'login') {
-                var rBtn = document.createElement('button');
-                rBtn.className = 'wa-icon-btn';
-                rBtn.innerHTML = '\u21bb'; 
-                rBtn.title = 'Refresh QR';
-                rBtn.onclick = function() { startSession(); };
-                actions.appendChild(rBtn);
-            }
+        if (refreshQrBtn) {
+            // Only show Refresh QR button on Login screen
+            refreshQrBtn.style.display = (name === 'login') ? 'flex' : 'none';
+        }
+
+        // Title update
+        var title = $('wa-panel-title');
+        if (title) {
+             $('wa-panel-title').textContent = (name === 'chat' ? (state.chatName || 'Chat') : (name === 'contacts' ? 'Select Contact' : 'WhatsApp'));
         }
 
         if (name !== 'chatList' && state.chatInterval) {
@@ -212,7 +210,7 @@
     /* ── Status & Polling ───────────────────────────────────────── */
     function checkStatus() {
         api('GET', 'WhatsApp/action/status').then(function (r) {
-            state.status = r.status;
+            state.status = r.status || 'disconnected';
             config.enabled = r.enabled !== false;
 
             var btn = $('whatsapp-floating-btn');
@@ -221,18 +219,42 @@
 
             updateStatusUI();
 
-            if (r.isConnected) {
-                if (state.screen === 'login') {
+            // Robust connection check
+            var isConnected = r.isConnected || 
+                              state.status === 'CONNECTED' || 
+                              state.status === 'AUTHENTICATED';
+
+            if (isConnected) {
+                // FORCE switch if we are on the login screen or if the visual state is wrong
+                var loginScreen = $('wa-screen-login');
+                if (state.screen === 'login' || (loginScreen && loginScreen.classList.contains('active'))) {
+                    console.log('WhatsApp Widget: Auto-switching to chatList (Forced)');
                     showScreen('chatList');
                     loadChats();
+                } else if (!state.screen || state.screen === '') {
+                     showScreen('chatList');
+                     loadChats();
                 }
-                if (!state.chatInterval && state.screen === 'chatList') {
-                    state.chatInterval = setInterval(loadChats, config.pollInterval);
+                
+                // Start chat polling if not already
+                if (!state.chatInterval) {
+                     state.chatInterval = setInterval(loadChats, config.pollInterval);
                 }
             } else {
-                if (state.screen !== 'login') showScreen('login');
+                // If disconnected and NOT on login, switch to login
+                if (state.screen !== 'login') {
+                     console.log('WhatsApp Widget: Disconnected, switching to login');
+                     showScreen('login');
+                }
+                
+                if (state.chatInterval) {
+                    clearInterval(state.chatInterval);
+                    state.chatInterval = null;
+                }
             }
-        }).catch(function () {});
+        }).catch(function (e) {
+            console.error('WhatsApp Widget: Status check error', e);
+        });
     }
 
     function updateStatusUI() {
@@ -478,37 +500,279 @@
         container.scrollTop = container.scrollHeight;
     }
 
+    /* ── Theme Detection ────────────────────────────────────────── */
+    /* ── Theme Detection ────────────────────────────────────────── */
+    function updateTheme() {
+        var panel = $('wa-panel-root');
+        if (!panel) return;
+        
+        // Check LocalStorage first
+        var saved = localStorage.getItem('wa-theme-pref');
+        if (saved) {
+             if (saved === 'dark') panel.classList.add('wa-dark');
+             else panel.classList.remove('wa-dark');
+             return;
+        }
+
+        // Auto-detect
+        var isDark = document.body.classList.contains('dark') || 
+                     document.body.classList.contains('dark-theme') || 
+                     document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        if (isDark) {
+            panel.classList.add('wa-dark');
+            var moon = panel.querySelector('.wa-theme-icon-moon');
+            var sun = panel.querySelector('.wa-theme-icon-sun');
+            if (moon) moon.style.display = 'none';
+            if (sun) sun.style.display = 'block';
+        } else {
+            panel.classList.remove('wa-dark');
+            var moon = panel.querySelector('.wa-theme-icon-moon');
+            var sun = panel.querySelector('.wa-theme-icon-sun');
+            if (moon) moon.style.display = 'block';
+            if (sun) sun.style.display = 'none';
+        }
+    }
+
+    function toggleTheme() {
+        var panel = $('wa-panel-root');
+        var isDark = panel.classList.contains('wa-dark');
+        if (isDark) {
+            // Switch to Light
+            panel.classList.remove('wa-dark');
+            localStorage.setItem('wa-theme-pref', 'light');
+            updateTheme(); // Trigger icon update
+        } else {
+            // Switch to Dark
+            panel.classList.add('wa-dark');
+            localStorage.setItem('wa-theme-pref', 'dark');
+            updateTheme(); // Trigger icon update
+        }
+    }
+
+    /* ── UI Building ────────────────────────────────────────────── */
+    function buildButton() {
+        if ($('whatsapp-floating-btn')) return;
+        var btn = document.createElement('button');
+        btn.className = 'whatsapp-floating-btn';
+        btn.id = 'whatsapp-floating-btn';
+        btn.innerHTML = WA_SVG + '<span class="wa-status-dot disconnected" id="wa-status-dot"></span>';
+        btn.style.display = 'none'; 
+        document.body.appendChild(btn);
+
+        btn.addEventListener('click', function () {
+            if (!state.panelBuilt) buildPanel();
+            toggle();
+        });
+    }
+
+    function buildPanel() {
+        if (state.panelBuilt) return;
+        state.panelBuilt = true;
+
+        var root = document.createElement('div');
+        root.id = 'wa-panel-root';
+        // Inner Panel Content
+        var panelHtml = [
+            '<div class="whatsapp-widget-panel" id="wa-panel">',
+            '  <div class="wa-panel-header">',
+            '    <button class="wa-back-btn" id="wa-back-btn">\u2190</button>',
+            '    <div class="wa-header-info" style="flex:1">',
+            '      <div class="wa-title" id="wa-panel-title">WhatsApp</div>',
+            '      <div class="wa-status-text" id="wa-panel-status">Checking\u2026</div>',
+            '    </div>',
+            '    <div class="wa-header-actions" id="wa-header-actions">',
+            '       <button class="wa-icon-btn" id="wa-theme-btn" title="Toggle Theme">',
+            '           <svg class="wa-theme-icon-sun" style="display:none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.29 1.29c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.29 1.29c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.29-1.29zm1.41-13.78c-.39-.39-1.02-.39-1.41 0l-1.29 1.29c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.29-1.29c.39-.39.39-1.02 0-1.41zM7.28 17.39c-.39-.39-1.02-.39-1.41 0l-1.29 1.29c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.29-1.29c.39-.39.39-1.02 0-1.41z"/></svg>',
+            '           <svg class="wa-theme-icon-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>',
+            '       </button>',
+            '       <button class="wa-icon-btn" id="wa-btn-new-chat" title="New Chat" style="display:none">', // Initially hidden, shown in chat list? No, header is global.
+            '           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
+            '       </button>',
+            '    </div>',
+            '    <button class="wa-logout-btn" id="wa-logout-btn" title="Logout" style="display:none">\u23FB</button>',
+            '    <button class="wa-close-btn" id="wa-close-btn">\u2715</button>',
+            '  </div>',
+            
+            '  <div class="wa-screen active" id="wa-screen-login">',
+            '     <div class="wa-login-container">',
+            '       <div class="wa-login-text">',
+            '         <div class="wa-login-title">Use WhatsApp on your computer</div>',
+            '         <ol class="wa-login-steps">',
+            '           <li>Open WhatsApp on your phone</li>',
+            '           <li>Tap <strong>Menu</strong> or <strong>Settings</strong> and select <strong>Linked Devices</strong></li>',
+            '           <li>Tap on <strong>Link a Device</strong></li>',
+            '           <li>Point your phone to this screen to capture the code</li>',
+            '         </ol>',
+            '         <button class="wa-connect-btn" id="wa-connect-btn">Generate QR Code</button>',
+            '       </div>',
+            '       <div class="wa-qr-wrapper">',
+            '          <div class="wa-spinner" id="wa-qr-spinner" style="display:none"></div>',
+            '          <div class="wa-qr-container" id="wa-qr-container" style="display:none">',
+            '             <img id="wa-qr-img" src="" alt="Scan me" style="display:block; width: 100%; height: auto;"/>',
+            '          </div>',
+            '          <button class="wa-icon-btn" id="wa-refresh-qr" style="display:none;margin-top:10px" title="Refresh QR">\u21BB Refresh QR</button>',
+            '       </div>',
+            '     </div>',
+            '  </div>',
+
+            '  <div class="wa-screen" id="wa-screen-chatList">',
+            '     <div class="wa-search-bar">',
+            '       <input type="text" id="wa-search-input" placeholder="Search chats \u2026">',
+            '     </div>', 
+            '     <div class="wa-panel-body" id="wa-chat-list"></div>',
+            '  </div>',
+
+            '  <div class="wa-screen" id="wa-screen-chat">',
+            '     <div class="wa-messages-container" id="wa-messages-container"></div>',
+            '     <div class="wa-send-box">',
+            '        <input type="text" id="wa-message-input" placeholder="Type a message\u2026">',
+            '        <button class="wa-send-btn" id="wa-send-btn">' + SEND_SVG + '</button>',
+            '     </div>',
+            '  </div>',
+            
+            '  <div class="wa-screen" id="wa-screen-contacts">',
+            '      <div class="wa-search-bar">', // Added search for contacts too?
+            '         <input type="text" id="wa-contact-search" placeholder="Search contacts \u2026">',
+            '      </div>',
+            '      <div class="wa-panel-body" id="wa-contacts-list"></div>',
+            '  </div>',
+
+            '</div>' // End .whatsapp-widget-panel
+        ].join('');
+        
+        root.innerHTML = panelHtml;
+        document.body.appendChild(root);
+        
+        // Inject Resizers
+        var resizers = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+        resizers.forEach(function(dir) {
+            var el = document.createElement('div');
+            el.className = 'wa-resizer ' + dir;
+            root.appendChild(el); // Append to ROOT
+            
+            // Resize Logic
+            el.addEventListener('mousedown', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                root.classList.add('wa-resizing'); // Add class to root to disable pointers
+                
+                var startX = e.clientX, startY = e.clientY;
+                var rect = root.getBoundingClientRect();
+                var startW = rect.width, startH = rect.height;
+                var styles = window.getComputedStyle(root);
+                var startRight = parseFloat(styles.right); // Root uses right
+                var startBottom = parseFloat(styles.bottom); // Root uses bottom
+                
+                function onMove(e) {
+                    var dx = e.clientX - startX;
+                    var dy = e.clientY - startY;
+                    
+                    // Width logic (Dragging Left increases Width, Dragging Right increases Width but must adjust Right pos)
+                    
+                    if (dir.indexOf('w') !== -1) {
+                        root.style.width = Math.max(300, startW - dx) + 'px';
+                    }
+                    if (dir.indexOf('e') !== -1) {
+                         // Increasing width to the right means shifting right edge. 
+                         var newW = Math.max(300, startW + dx);
+                         root.style.width = newW + 'px';
+                         root.style.right = (startRight - (newW - startW)) + 'px';
+                    }
+                    
+                    if (dir.indexOf('n') !== -1) {
+                        // Dragging Up (-dy) -> Increase Height
+                        root.style.height = Math.max(400, startH - dy) + 'px';
+                    }
+                    if (dir.indexOf('s') !== -1) {
+                        // Dragging Down (+dy) -> Increase Height, Decrease Bottom
+                        var newH = Math.max(400, startH + dy);
+                        root.style.height = newH + 'px';
+                        root.style.bottom = (startBottom - (newH - startH)) + 'px';
+                    }
+                }
+                function onUp() {
+                    root.classList.remove('wa-resizing');
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                }
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+        });
+
+        // Event Listeners
+        var closeBtn = $('wa-close-btn'); if(closeBtn) closeBtn.onclick = close;
+        var connBtn = $('wa-connect-btn'); if(connBtn) connBtn.onclick = function() { startSession(); };
+        var refBtn = $('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
+        var backBtn = $('wa-back-btn'); if(backBtn) backBtn.onclick = function() { showScreen(state.lastScreen || 'chatList'); };
+        var sendBtn = $('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
+        var msgInput = $('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
+        var lootBtn = $('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { api('POST', 'WhatsApp/action/logout').then(function() { 
+             state.status = 'DISCONNECTED'; checkStatus(); 
+        }); };
+        var searchInp = $('wa-search-input'); if(searchInp) searchInp.onkeyup = function(e) { filterList('wa-chat-list', e.target.value); };
+        
+        // New Chat Button (in Header)
+        var newChatBtn = $('wa-btn-new-chat'); 
+        if(newChatBtn) newChatBtn.onclick = function() { showScreen('contacts'); loadContacts(); };
+        
+        // Contact Search
+        var contSearch = $('wa-contact-search'); 
+        if(contSearch) contSearch.onkeyup = function(e) { filterList('wa-contacts-list', e.target.value); };
+        
+        // Theme Toggle
+        var themeBtn = $('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
+
+        // Ensure updateTheme checks immediately after build
+        setTimeout(updateTheme, 0);
+    }
+
+    /* ── Renderers ──────────────────────────────────────────────── */
+    // ... existing renderer functions ...
+
+    function toggle() {
+        var root = $('wa-panel-root');
+        if (state.isOpen) close(); else open();
+    }
+
+    function open() {
+        state.isOpen = true;
+        var root = $('wa-panel-root');
+        if (root) root.classList.add('open');
+        updateTheme();
+        if (state.chats.length === 0 && (state.status === 'CONNECTED' || state.status === 'AUTHENTICATED')) {
+             checkStatus(); 
+        } else {
+             checkStatus();
+        }
+    }
+
+    function close() {
+        state.isOpen = false;
+        var root = $('wa-panel-root');
+        if (root) root.classList.remove('open');
+    }
+
     /* ── Init ───────────────────────────────────────────────────── */
     function init() {
-        console.log('WhatsApp Widget: Init called. State:', state.initialized);
+        console.log('WhatsApp Widget: Init called');
         if (state.initialized) return;
-        
         if (typeof Espo === 'undefined' || !Espo.Ajax || !document.body) {
-            console.log('WhatsApp Widget: Espo or Body not ready. Retrying...');
             setTimeout(init, 500); return;
         }
-        
-        console.log('WhatsApp Widget: Espo ready. Building UI...');
         state.initialized = true;
+        buildButton(); // Button is built, panel is built heavily lazy or on click
         
-        // Initial check if we are enabled
+        // Check status
         api('GET', 'WhatsApp/action/status').then(function(r) {
-             console.log('WhatsApp Widget: Status received', r);
              config.enabled = r.enabled !== false;
+             var btn = $('whatsapp-floating-btn');
+             if (btn) btn.style.display = config.enabled ? 'flex' : 'none';
              if (config.enabled) {
-                 buildButton();
-                 setInterval(function() { 
-                     // Simple poll for status/enable check
-                     if (!state.isOpen) checkStatus();
-                 }, 30000); 
-             } else {
-                 console.log('WhatsApp Widget: Disabled by config');
+                 checkStatus();
+                 setInterval(function() { if (!state.isOpen) checkStatus(); }, 30000);
              }
-        }).catch(function(e) {
-             console.error('WhatsApp Widget: Status check failed', e);
-             // Backend might look down, retry
-             setTimeout(function() { state.initialized = false; init(); }, 5000);
-        });
+        }).catch(function() {});
     }
 
     if (document.readyState === 'loading') {
@@ -517,8 +781,9 @@
         setTimeout(init, 1000);
     }
     window.addEventListener('hashchange', function() { if (!state.initialized) init(); else {
-        // re-check if button needs to be re-injected if DOM cleared (rare in Espo single page app but possible)
         if (config.enabled && !$('whatsapp-floating-btn')) buildButton();
+        updateTheme();
     }});
-
+    
 })();
+

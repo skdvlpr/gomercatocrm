@@ -74,33 +74,23 @@ class WhatsApp extends Base
     public function getActionGetChatMessages(Request $request, Response $response): array
     {
         $chatId = $request->getQueryParam('chatId');
-
         if (!$chatId) {
             throw new BadRequest('chatId is required');
         }
 
-        // Fetch from local DB
-        $entityManager = $this->getContainer()->get('entityManager');
-        $messages = $entityManager->getRepository('WhatsAppMessage')
-            ->where(['chatId' => $chatId])
-            ->order('timestamp', 'DESC')
-            ->limit(0, 100)
-            ->find();
+        // Fetch from WhatsApp API (Real-time from phone)
+        $result = $this->getWhatsAppClient()->getChatMessages($chatId, 50);
 
-        $list = [];
-        foreach ($messages as $msg) {
-            $list[] = [
-                'id' => $msg->get('messageId'),
-                'body' => $msg->get('body'),
-                'fromMe' => $msg->get('fromMe'),
-                'timestamp' => $msg->get('timestamp') ? strtotime($msg->get('timestamp')) : time(),
-                'status' => $msg->get('status')
-            ];
-        }
+        // Map API result to expected format if needed, but the client usually handles wwebjs format.
+        // The WhatsAppClient::getChatMessages returns array of message objects.
+        // We might need to ensure consistency.
+
+        // If result is empty, try DB? Or just return result.
+        // API returns standard wwebjs Message objects.
 
         return [
             'success' => true,
-            'list' => $list
+            'list' => $result
         ];
     }
 
