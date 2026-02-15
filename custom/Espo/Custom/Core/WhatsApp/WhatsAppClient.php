@@ -58,7 +58,7 @@ class WhatsAppClient
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
+
 
         if ($httpCode === 200 && $response) {
             return 'data:' . ($contentType ?: 'image/png') . ';base64,' . base64_encode($response);
@@ -148,7 +148,7 @@ class WhatsAppClient
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
+
 
         if ($curlError) {
             $this->log->error("WhatsAppClient cURL Error: " . $curlError);

@@ -1,0 +1,42 @@
+{
+    "fields": {
+        "body": {
+            "type": "text",
+            "required": true
+        },
+        "chatId": {
+            "type": "varchar",
+            "required": true,
+            "len": 100,
+            "index": true
+        },
+        "fromMe": {
+            "type": "bool",
+            "default": false
+        },
+        "messageId": {
+            "type": "varchar",
+            "len": 100,
+            "index": true,
+            "unique": true
+        },
+        "status": {
+            "type": "enum",
+            "options": ["Sent", "Delivered", "Read", "Failed", "Received"],
+            "default": "Sent"
+        },
+        "timestamp": {
+            "type": "datetime",
+            "index": true
+        }
+    },
+    "collection": {
+        "sortBy": "timestamp",
+        "asc": false
+    },
+    "indexes": {
+        "chatIdTimestamp": {
+            "columns": ["chatId", "timestamp"]
+        }
+    }
+}
