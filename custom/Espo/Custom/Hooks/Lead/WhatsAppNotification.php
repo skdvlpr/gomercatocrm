@@ -7,21 +7,26 @@ use Espo\ORM\Repository\Option\SaveOptions;
 use Espo\Custom\Core\WhatsApp\WhatsAppClient;
 use Espo\Core\Utils\Config;
 use Espo\Core\Utils\Log;
+use Espo\Core\Container;
+use Espo\Core\WebSocket\Submission as WebSocketSubmission;
 
 class WhatsAppNotification implements AfterSave
 {
     private WhatsAppClient $whatsappClient;
     private Config $config;
     private Log $log;
+    private Container $container;
 
     public function __construct(
         WhatsAppClient $whatsappClient,
         Config $config,
-        Log $log
+        Log $log,
+        Container $container
     ) {
         $this->whatsappClient = $whatsappClient;
         $this->config = $config;
         $this->log = $log;
+        $this->container = $container;
     }
 
     public function afterSave(Entity $entity, SaveOptions $options): void
@@ -58,6 +63,27 @@ class WhatsAppNotification implements AfterSave
                     'leadId' => $entity->getId(),
                     'phone' => $phoneNumber
                 ]);
+
+                // Publish via WebSocket
+                try {
+                    if ($this->container->has(WebSocketSubmission::class)) {
+                        /** @var WebSocketSubmission $ws */
+                        $ws = $this->container->get(WebSocketSubmission::class);
+                        $ws->submit('WhatsApp', null, [
+                            'action' => 'message',
+                            'data' => [
+                                'body' => $message,
+                                'chatId' => $phoneNumber,
+                                // 'messageId' => uniqid('auto_'),
+                                'fromMe' => true,
+                                'timestamp' => date('Y-m-d H:i:s'),
+                                'status' => 'Sent'
+                            ]
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    $this->log->error('WhatsAppNotification WebSocket Error: ' . $e->getMessage());
+                }
             } else {
                 $this->log->warning('WhatsAppNotification: Failed to send message', [
                     'leadId' => $entity->getId()

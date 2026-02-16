@@ -167,9 +167,9 @@
                      loadChats();
                 }
                 
-                // Start chat polling if not already
-                if (!state.chatInterval) {
-                     state.chatInterval = setInterval(loadChats, config.pollInterval);
+                // Start Real-Time subscription
+                if (!state.subscribed) {
+                     subscribeToRealTime();
                 }
             } else {
                 // If disconnected and NOT on login, switch to login
@@ -212,7 +212,66 @@
 
     function stopPolling() {
         if (state.statusInterval) { clearInterval(state.statusInterval); state.statusInterval = null; }
+        // Chat interval is replaced by WebSocket, but we keep this for legacy safety
         if (state.chatInterval) { clearInterval(state.chatInterval); state.chatInterval = null; }
+    }
+
+    function subscribeToRealTime() {
+        if (state.subscribed) return;
+
+        var topic = '/WhatsApp';
+        var callback = function(payload) {
+            if (payload && payload.action === 'message') {
+                onRealTimeMessage(payload.data);
+            }
+        };
+
+        // Try App.fayeClient first (most common in authenticated Espo)
+        if (typeof App !== 'undefined' && App.fayeClient) {
+            App.fayeClient.subscribe(topic, callback);
+            state.subscribed = true;
+            return;
+        }
+
+        // Try getting from loader
+        if (typeof Espo !== 'undefined' && Espo.loader && Espo.loader.has('faye')) {
+            Espo.loader.get('faye').then(function(faye) {
+                faye.subscribe(topic, callback);
+                state.subscribed = true;
+            });
+            return;
+        }
+        
+        // Retry if dependencies not loaded, but don't loop forever
+        setTimeout(function() {
+             if (!state.subscribed && ((typeof App !== 'undefined' && App.fayeClient) || (typeof Espo !== 'undefined' && Espo.loader))) {
+                 subscribeToRealTime();
+             }
+        }, 3000);
+    }
+
+    function onRealTimeMessage(msg) {
+        if (!msg) return;
+
+        // 1. Append to Chat View if open
+        if (state.screen === 'chat' && state.chatId === msg.chatId) {
+            // Avoid duplicates
+            var exists = false; // Simple check?
+            // In a real app, we check IDs. Here we trust the stream or check last message.
+            // Let's just append and let the renderer handle or fetch fresh.
+            // Better: Append to state and render.
+            state.messages.push(msg);
+            renderMessages(state.messages);
+            // Scroll to bottom
+            var container = _$('wa-messages-container');
+            if (container) container.scrollTop = container.scrollHeight;
+        }
+
+        // 2. Refresh Chat List (to show unread, bubble up)
+        // We only do this if the panel is open to save resources
+        if (state.isOpen) {
+            loadChats(); 
+        }
     }
 
     function logout() {

@@ -7,6 +7,7 @@ use Espo\Core\Api\Response;
 use Espo\Core\Exceptions\BadRequest;
 use Espo\Custom\Core\WhatsApp\WhatsAppClient;
 use Espo\Core\InjectableFactory;
+use Espo\Core\WebSocket\Submission as WebSocketSubmission;
 
 class WhatsApp extends Base
 {
@@ -136,6 +137,21 @@ class WhatsApp extends Base
                 'messageId' => uniqid('sent_')
             ]);
             $entityManager->saveEntity($msgEntity);
+
+            // 3. Publish via WebSocket
+            try {
+                if ($this->getContainer()->has(WebSocketSubmission::class)) {
+                    /** @var WebSocketSubmission $ws */
+                    $ws = $this->getContainer()->get(WebSocketSubmission::class);
+                    $ws->submit('WhatsApp', null, [
+                        'action' => 'message',
+                        'data' => $msgEntity->toArray()
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                // Ignore WebSocket errors to prevent blocking message sending
+                $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
+            }
         }
 
         return [
@@ -211,6 +227,20 @@ class WhatsApp extends Base
                 'messageId' => $msgId ?: uniqid('recv_')
             ]);
             $entityManager->saveEntity($msgEntity);
+
+            // Publish via WebSocket
+            try {
+                if ($this->getContainer()->has(WebSocketSubmission::class)) {
+                    /** @var WebSocketSubmission $ws */
+                    $ws = $this->getContainer()->get(WebSocketSubmission::class);
+                    $ws->submit('WhatsApp', null, [
+                        'action' => 'message',
+                        'data' => $msgEntity->toArray()
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
+            }
         }
 
         return ['success' => true];

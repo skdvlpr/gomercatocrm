@@ -1,0 +1,63 @@
+{
+    "setup": {
+        "label": "Setup",
+        "itemList": [
+            {
+                "url": "#Admin/workingTimeCalendar",
+                "label": "Working Time Calendars",
+                "iconClass": "far fa-calendar-alt",
+                "description": "workingTimeCalendars",
+                "tabQuickSearch": true
+            },
+            {
+                "url": "#Admin/layoutSets",
+                "label": "Layout Sets",
+                "iconClass": "fas fa-table",
+                "description": "layoutSets"
+            },
+            {
+                "url": "#Admin/dashboardTemplates",
+                "label": "Dashboard Templates",
+                "iconClass": "fas fa-th-large",
+                "description": "dashboardTemplates"
+            },
+            {
+                "url": "#Admin/leadCapture",
+                "label": "Lead Capture",
+                "iconClass": "fas fa-id-card",
+                "description": "leadCapture"
+            },
+            {
+                "url": "#Admin/integrations/name=CsvLeadImport",
+                "label": "Import Leads from CSV",
+                "iconClass": "fas fa-file-csv",
+                "description": "Configure CSV Import Settings"
+            },
+            {
+                "url": "#Admin/pdfTemplates",
+                "label": "PDF Templates",
+                "iconClass": "fas fa-file-pdf",
+                "description": "pdfTemplates"
+            },
+            {
+                "url": "#Admin/webhooks",
+                "label": "Webhooks",
+                "iconClass": "fas fa-share-alt icon-rotate-90",
+                "description": "webhooks"
+            },
+            {
+                "url": "#Admin/addressCountries",
+                "label": "Address Countries",
+                "iconClass": "far fa-flag",
+                "description": "addressCountries"
+            },
+            {
+                "url": "#Admin/authenticationProviders",
+                "label": "Authentication Providers",
+                "iconClass": "fas fa-sign-in-alt",
+                "description": "authenticationProviders"
+            }
+        ],
+        "order": 24
+    }
+}
