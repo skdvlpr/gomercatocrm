@@ -19,6 +19,93 @@ EspoCRM customized for GoMercato.
    - Password: `db`
 5. **After Installation**: Run `ddev restart` to setup automatic jobs.
 
+## 📱 WhatsApp Integration Guide
+
+This section details the custom WhatsApp widget integration, including its architecture, components, and usage.
+
+### 🏗 Architecture Overview
+
+The integration consists of a standalone frontend widget and a backend API controller.
+
+1.  **Frontend**: A pure JavaScript widget (`whatsapp-widget-init.js`) injected globally via EspoCRM metadata. It handles UI rendering, state management (chats, messages, contacts), and long-polling for real-time updates.
+2.  **Backend**: A custom controller (`WhatsApp.php`) that acts as a bridge between the frontend and the WhatsApp service (e.g., via `wwebjs-api` or similar).
+
+### 🧩 Components Breakdown
+
+#### 1. Frontend Widget (`client/custom/src/whatsapp-widget-init.js`)
+
+This is the core of the client-side logic. It does not use EspoCRM's standard View/Model system to ensure it floats independently of the main application router.
+
+- **Initialization**: Injected automatically on page load. It builds a floating action button (`#whatsapp-floating-btn`).
+- **State Management**: Maintains local state for `isOpen`, `chatId`, `chats` list, and `messages`.
+- **Polling**:
+  - **Status Loop**: Checks `WhatsApp/action/status` every 5-30 seconds to update connectivity icons (Red/Green dot).
+  - **Chat Loop**: When open, polls `WhatsApp/action/getChats` to keep the list updated.
+- **UI Layers**:
+  - **Login Screen**: Displays QR code for authentication.
+  - **Chat List**: Searchable list of active conversations.
+  - **Contact List**: Searchable list of all contacts for starting new chats.
+  - **Chat View**: Message history and input area.
+- ** key features**:
+  - **Cache Busting**: Uses timestamps to force CSS/JS updates.
+  - **Autocomplete Disabled**: Forces `autocomplete="off"` on all inputs to prevent browser interference.
+  - **Scroll Management**: Manages `overflow-y` for smooth list scrolling.
+
+#### 2. Backend Controller (`custom/Espo/Custom/Controllers/WhatsApp.php`)
+
+Handles all API requests from the widget.
+
+- **Endpoints**:
+  - `actionStatus`: Returns `{ enabled: bool, status: string, isConnected: bool }`.
+  - `actionLogin`: Initiates the Puppeteer/WhatsApp session.
+  - `actionQrCode`: Returns the QR code image data (base64).
+  - `actionGetChats`: Returns a list of recent chats with last messages.
+  - `actionGetContacts`: Returns a list of phonebook contacts.
+  - `actionGetChatMessages`: Returns message history for a specific `chatId`.
+  - `actionSendMessage`: Sends a text message to a `chatId`.
+  - `actionLogout`: Destroys the current session.
+
+#### 3. Metadata Injection (`custom/Espo/Custom/Resources/metadata/app/client.json`)
+
+Registers the script to be loaded globally.
+
+```json
+{
+  "scriptList": ["__APPEND__", "client/custom/src/whatsapp-widget-init.js"]
+}
+```
+
+### ⚙️ Setup & Configuration
+
+1.  **Prerequisites**: Ensure the Node.js based WhatsApp API service is running (if external).
+2.  **Enable Integration**:
+    - Go to **Administration > Integrations > WhatsApp**.
+    - Tick **Enabled**.
+    - Save.
+
+### 🚀 Usage Guide
+
+1.  **Open**: Click the green WhatsApp floating button in the bottom-right corner.
+2.  **Connect**:
+    - If not connected, you will see a "Generate QR Code" button.
+    - Click it and scan the QR code with your phone (Linked Devices).
+3.  **Chat**:
+    - **Existing Chats**: Select a chat from the list to continue conversation.
+    - **New Chat**: Click the `+` icon, search for a contact, and select them.
+4.  **Disconnect**: Click the `Logout` icon (top-right of widget) to sever the connection.
+
+### 🛠 Troubleshooting
+
+| Issue                     | Possible Cause                     | Solution                                                                     |
+| :------------------------ | :--------------------------------- | :--------------------------------------------------------------------------- |
+| **Widget not appearing**  | Metadata cache or file permissions | Run `php command.php rebuild`. Check browser console for JS errors.          |
+| **"Network Error"**       | Backend API failure                | Check `data/logs/espo-*.log` for 500 errors. Ensure controller exists.       |
+| **QR Code won't load**    | Session already active or timeout  | Click "Refresh QR". If stuck, restart the backend service.                   |
+| **Filtering not working** | Browser autocomplete interference  | Ensure `autocomplete="off"` is present on inputs (fixed in latest version).  |
+| **Visual Bugs**           | CSS Caching                        | Hard reload (Ctrl+F5). CSS is versioned but browser cache can be aggressive. |
+
+---
+
 ## Auto-features
 
 - ✅ Cron runs every minute (via ddev-cron addon)

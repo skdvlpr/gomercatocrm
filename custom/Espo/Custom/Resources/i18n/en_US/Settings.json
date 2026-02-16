@@ -1,0 +1,7 @@
+{
+    "fields": {
+        "whatsappEnabled": "WhatsApp Integration Enabled",
+        "whatsappApiUrl": "WhatsApp API URL",
+        "whatsappApiKey": "WhatsApp API Key"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "whatsappEnabled": {
+        "type": "bool",
+        "default": true
+    },
+    "whatsappApiUrl": {
+        "type": "varchar",
+        "default": "http://whatsapp-api:3000",
+        "required": true
+    },
+    "whatsappApiKey": {
+        "type": "varchar",
+        "required": true
+    }
+}
