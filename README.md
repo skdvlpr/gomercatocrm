@@ -21,6 +21,28 @@ EspoCRM customized for GoMercato.
 
 ## 📱 WhatsApp Integration Guide
 
+### 🔑 Production Setup (Important)
+
+The default API Key for the WhatsApp integration is configured for local development (`espocrm-secret-key`). **For production environments, you must change this to a secure random string.**
+
+**Steps to change the API Key:**
+
+1.  **Update Container Config**: Edit `.ddev/docker-compose.whatsapp.yaml` (or your production `docker-compose.yaml`):
+    ```yaml
+    environment:
+      - API_KEY=your-secure-random-key
+    ```
+2.  **Update EspoCRM Config**: Edit `data/config.php`:
+    ```php
+    'whatsappApiKey' => 'your-secure-random-key',
+    ```
+3.  **Restart Services**:
+    ```bash
+    ddev restart
+    # Or for production:
+    docker-compose down && docker-compose up -d
+    ```
+
 This section details the custom WhatsApp widget integration, including its architecture, components, and usage.
 
 ### 🏗 Architecture Overview
