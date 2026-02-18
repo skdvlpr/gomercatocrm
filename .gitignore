@@ -15,3 +15,6 @@
 .vscode/
 *.swp
 .DS_Store
+
+# Implementation plans from other AI models
+/impls
