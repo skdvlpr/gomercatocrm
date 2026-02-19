@@ -229,4 +229,20 @@ Ajax.postRequest('MyScope/' + id + '/myAction')
     .catch(xhr => { ... });
 ```
 
-Always handle the `.catch()` to show a user-friendly error message.
+## 🆕 Recent Updates (February 2026)
+
+### Fixed & Improved Features
+
+1.  **Draggable Widget**:
+    - The WhatsApp widget header is now properly draggable.
+    - Added `.wa-dragging` class to disable CSS transitions and text selection during drag, ensuring a smooth, native-app feel.
+2.  **Contact Avatars**:
+    - Implemented a robust fallback system for contact avatars.
+    - Since the API currently does not return profile picture URLs (returns 404), the widget now gracefully displays colored circles with initials (e.g., "JD" for John Doe) instead of broken images.
+3.  **Timestamp Normalization**:
+    - Fixed the "Invalid Date" bug in the chat list.
+    - Implemented `normalizeTimestamp` to handle both UNIX timestamps (from API) and MySQL date strings (from DB), ensuring correct sorting and display of time.
+
+4.  **Metadata & Stability**:
+    - Resolved "Non trovato" errors by ensuring `WhatsAppMessage` entity metadata is correctly synced between backend and frontend.
+    - Added a logout confirmation dialog to prevent accidental disconnections.

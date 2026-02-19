@@ -107,5 +107,4 @@ return array(
     'dc1275c308c5b416beb314b6317daca2' => $vendorDir . '/overtrue/pinyin/src/const.php',
     'decc78cc4436b1292c6c0d151b19445c' => $vendorDir . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
     '7dd996d98a91d095f100c75e0b9e2391' => $vendorDir . '/spatie/async/src/helpers.php',
-    '1ed739fc6a5d85b4ba4abde386cd8cac' => $baseDir . '/application/Espo/Resources/defaults/class-aliases.php',
 );

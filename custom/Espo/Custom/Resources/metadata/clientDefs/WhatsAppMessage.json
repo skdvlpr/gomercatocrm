@@ -1,0 +1,6 @@
+{
+    "controller": "Controllers.Record",
+    "menu": {
+        "list": false
+    }
+}

@@ -80,7 +80,8 @@ class WhatsApp extends Base
         }
 
         // Fetch from WhatsApp API (Real-time from phone)
-        $result = $this->getWhatsAppClient()->getChatMessages($chatId, 50);
+        $limit = (int) ($request->getQueryParam('limit') ?? 100);
+        $result = $this->getWhatsAppClient()->getChatMessages($chatId, $limit);
 
         // Map API result to expected format if needed, but the client usually handles wwebjs format.
         // The WhatsAppClient::getChatMessages returns array of message objects.
@@ -103,6 +104,12 @@ class WhatsApp extends Base
             'success' => true,
             'list' => $contacts
         ];
+    }
+
+    public function getActionGetProfilePic(Request $request, Response $response): array
+    {
+        // Feature temporarily disabled as API does not support it yet.
+        return ['url' => null];
     }
 
     public function postActionLogout(Request $request, Response $response): array

@@ -80,10 +80,21 @@ class WhatsAppClient
         return $response['chats'] ?? $response['data'] ?? (is_array($response) && !isset($response['success']) ? $response : []);
     }
 
-    public function getChatMessages(string $chatId, int $limit = 50): array
+    public function getChatMessages(string $chatId, int $limit = 100): array
     {
         $response = $this->makeRequest('GET', "/client/getChatMessages/{$this->sessionId}?chatId={$chatId}&limit={$limit}");
-        return $response['messages'] ?? $response['data'] ?? (is_array($response) && !isset($response['success']) ? $response : []);
+        $messages = $response['messages'] ?? $response['data'] ?? [];
+
+        // If empty, try to force sync via downloadAndReadMessages
+        if (empty($messages)) {
+            $response = $this->makeRequest('POST', "/client/downloadAndReadMessages/{$this->sessionId}", [
+                'chatId' => $chatId,
+                'limit' => $limit
+            ]);
+            $messages = $response['messages'] ?? [];
+        }
+
+        return $messages;
     }
 
     public function getContacts(): array

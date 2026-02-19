@@ -64,6 +64,164 @@
         return Espo.Ajax.postRequest(url, data);
     }
 
+    /* ── Helpers for Contacts & Avatars ─────────────────────────── */
+    function extractPhoneNumber(contactId) {
+        if (typeof contactId === 'string') {
+            return contactId.replace('@c.us', '').replace('@s.whatsapp.net', '').replace('@g.us', '').replace('@us', '');
+        }
+        if (contactId && contactId._serialized) {
+            return contactId._serialized.replace('@c.us', '').replace('@s.whatsapp.net', '').replace('@g.us', '').replace('@us', '');
+        }
+        if (contactId && contactId.user) {
+            return contactId.user;
+        }
+        return '';
+    }
+
+    function deduplicateContacts(contacts) {
+        var seen = {};
+        var unique = [];
+        
+        // 1. Filter out @lid contacts if possible, or merge them.
+        // Actually, @lid are alternate IDs for the same person. We usually want @c.us.
+        // Also groups are @g.us.
+        
+        contacts.forEach(function(contact) {
+            var id = (contact.id && contact.id._serialized) || contact.id;
+            
+            // SKIP @lid identities to avoid duplicates
+            if (id && id.indexOf('@lid') !== -1) return;
+            
+            // For groups, we might want to keep them but maybe format name?
+            // User said: "Hide Postfix @..." for groups? 
+            // extractPhoneNumber already strips @g.us, so display is fine.
+            
+            // Deduplicate by clean number/id
+            var phone = extractPhoneNumber(id);
+            if (!seen[phone]) {
+                seen[phone] = true;
+                unique.push(contact);
+            } else {
+                // If we already have this number, check if this new one has a better name?
+                // The current iteration usually works fine if we just skip @lid.
+                var existingIndex = unique.findIndex(function(c) {
+                    return extractPhoneNumber(c.id) === phone;
+                });
+                
+                if (existingIndex !== -1) {
+                     var existing = unique[existingIndex];
+                     // If existing has no name but new one does, swap
+                     if ((!existing.name && !existing.pushname) && (contact.name || contact.pushname)) {
+                         unique[existingIndex] = contact;
+                     }
+                }
+            }
+        });
+        
+        return unique;
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
+    function stringToColor(str) {
+        var colors = [
+            '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e',
+            '#16a085', '#27ae60', '#2980b9', '#8e44ad', '#2c3e50',
+            '#f1c40f', '#e67e22', '#e74c3c', '#95a5a6', '#f39c12'
+        ];
+        
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function getAvatarHtml(contact, size) {
+        size = size || 40;
+        var id = (contact.id && contact.id._serialized) ? contact.id._serialized : (contact.id || '');
+        var name = contact.name || contact.pushname || extractPhoneNumber(id);
+        var initials = getInitials(name);
+        var color = stringToColor(name);
+        
+        var picUrl = null;
+        
+        // Check cache first
+        if (state.avatarCache && state.avatarCache[id]) {
+             picUrl = state.avatarCache[id];
+        } else if (contact.profilePicThumbObj && contact.profilePicThumbObj.eurl) {
+            picUrl = contact.profilePicThumbObj.eurl;
+        } else if (contact.profilePicUrl) {
+            picUrl = contact.profilePicUrl;
+        } else {
+            // Lazy load
+            if (id) {
+                setTimeout(function() { loadAvatar(id); }, 0);
+            }
+        }
+        
+        if (picUrl) {
+            return '<div class="wa-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
+                '<img src="' + esc(picUrl) + '" alt="' + esc(name) + '" ' +
+                'onerror="this.style.display=\\\'none\\\';this.nextElementSibling.style.display=\\\'flex\\\';">' +
+                '<div class="wa-avatar-initials" style="display:none;background:' + color + ';width:100%;height:100%;line-height:' + size + 'px;font-size:' + (size/2) + 'px;">' + initials + '</div>' + 
+            '</div>';
+        }
+        
+        return '<div class="wa-avatar" id="wa-avatar-' + esc(id) + '" style="width:' + size + 'px;height:' + size + 'px;">' +
+            '<div class="wa-avatar-initials" style="background:' + color + ';width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;font-size:' + (size/2) + 'px;">' +
+                initials +
+            '</div>' +
+        '</div>';
+    }
+
+    function loadAvatar(id) {
+        if (!state.avatarCache) state.avatarCache = {};
+        if (state.avatarCache[id] !== undefined) return; // Already fetching or fetched
+        
+        state.avatarCache[id] = null; // Mark as fetching/empty
+        
+        api('GET', 'WhatsApp/action/getProfilePic', { id: id }).then(function(r) {
+            if (r.url) {
+                state.avatarCache[id] = r.url;
+                // Update DOM if exists
+                var el = document.getElementById('wa-avatar-' + id);
+                if (el) {
+                    el.innerHTML = '<img src="' + esc(r.url) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                }
+                // Check Chat List avatars too (they might not have IDs but we can select by data-cid?)
+                // Actually getAvatarHtml is used in chat list too.
+                // We need a way to update chat list avatars.
+                // Chat list items usually redraw fully on render.
+                // But if we are live, we can try to update specific elements.
+            }
+        });
+    }
+
+    function normalizeTimestamp(ts) {
+        if (!ts) return Date.now();
+        // If it's a string looking like a date (contains - or :)
+        if (typeof ts === 'string' && (ts.indexOf('-') !== -1 || ts.indexOf(':') !== -1)) {
+            var d = new Date(ts.replace(' ', 'T'));
+            return isNaN(d.getTime()) ? Date.now() : d.getTime();
+        }
+        // Assume seconds if it's a number or numeric string
+        var num = parseFloat(ts);
+        if (isNaN(num)) return Date.now();
+        // If it seems like seconds (small number) vs millis (big number)
+        // Heuristic: unix timestamp in seconds is ~1.7e9, millis is ~1.7e12
+        if (num < 100000000000) return num * 1000;
+        return num;
+    }
+
     /* ── UI Building ────────────────────────────────────────────── */
 
     /* ── Navigation ──────────────────────────────────────────────── */
@@ -234,12 +392,25 @@
         }
 
         // Try getting from loader
-        if (typeof Espo !== 'undefined' && Espo.loader && Espo.loader.has('faye')) {
-            Espo.loader.get('faye').then(function(faye) {
-                faye.subscribe(topic, callback);
-                state.subscribed = true;
-            });
-            return;
+        if (typeof Espo !== 'undefined' && Espo.loader) {
+            // Check if faye is already loaded or available
+            // Espo.loader.has might not exist in all versions, use safely
+            var hasFaye = (Espo.loader.has && Espo.loader.has('faye')) || (Espo.loader.cache && Espo.loader.cache['faye']);
+            
+            if (hasFaye || !state.subscribed) {
+                if (Espo.loader.load) {
+                     Espo.loader.load('faye').then(function(faye) {
+                        faye.subscribe(topic, callback);
+                        state.subscribed = true;
+                     });
+                } else if (Espo.loader.get) {
+                     Espo.loader.get('faye').then(function(faye) {
+                        faye.subscribe(topic, callback);
+                        state.subscribed = true;
+                     });
+                }
+                return;
+            }
         }
         
         // Retry if dependencies not loaded, but don't loop forever
@@ -275,11 +446,22 @@
     }
 
     function logout() {
-        if (!confirm('Disconnect WhatsApp?')) return;
+        if (!confirm('Sei sicuro di voler disconnettere WhatsApp?\n\nDovrai scansionare nuovamente il QR code per riconnetterti.')) return;
+        
         api('POST', 'WhatsApp/action/logout').then(function() {
             state.status = 'DISCONNECTED';
+            state.subscribed = false;
             showScreen('login');
             startSession();
+            
+             // Clear state
+             state.chats = [];
+             state.messages = [];
+             state.contacts = [];
+             state.chatId = null;
+
+        }).catch(function(e) {
+             console.error('Logout error:', e);
         });
     }
 
@@ -364,7 +546,9 @@
         var list = _$('wa-contacts-list');
         if (list) list.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
         api('GET', 'WhatsApp/action/getContacts').then(function(r) {
-            state.contacts = r.list || [];
+            console.log('Raw contacts:', r.list);
+            state.contacts = deduplicateContacts(r.list || []); // DEDUPLICATE
+            console.log('Deduplicated contacts:', state.contacts);
             renderContacts(state.contacts);
         });
     }
@@ -377,23 +561,99 @@
         var container = _$('wa-messages-container');
         if (container) container.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
 
-        api('GET', 'WhatsApp/action/getChatMessages', { chatId: chatId, limit: 50 }).then(function (r) {
-            state.messages = r.list || [];
-            if (state.messages.length) {
-                renderMessages(state.messages);
-            } else {
-                fallbackToLastMessage(chatId);
-            }
+        // Fetch da API con limite aumentato
+        api('GET', 'WhatsApp/action/getChatMessages', { 
+            chatId: chatId, 
+            limit: 100 
+        }).then(function (r) {
+            var apiMessages = r.list || [];
+            
+            // Merge con messaggi salvati localmente (entities)
+            mergeMessages(apiMessages, chatId).then(function(merged) {
+                state.messages = merged;
+                if (state.messages.length) {
+                    renderMessages(state.messages);
+                } else {
+                    fallbackToLastMessage(chatId);
+                }
+            });
         }).catch(function () {
             fallbackToLastMessage(chatId);
+        });
+    }
+
+    function mergeMessages(apiMessages, chatId) {
+        return api('GET', 'WhatsAppMessage', {
+            where: [{
+                type: 'equals',
+                attribute: 'chatId',
+                value: chatId
+            }],
+            orderBy: 'timestamp',
+            order: 'desc',
+            maxSize: 100
+        }).then(function(dbResult) {
+            var dbMessages = dbResult.list || [];
+            var merged = {};
+            
+            // Merge and deduplicate by messageId
+            // Prioritize DB messages for persistence, but API might be newer/better status
+            // Actually, API (wwebjs) is usually source of truth for body/status.
+            
+            apiMessages.forEach(function(msg) {
+                var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
+                merged[id] = msg;
+            });
+            
+            dbMessages.forEach(function(msg) {
+                var id = msg.messageId;
+                if (!merged[id]) {
+                     merged[id] = msg;
+                }
+            });
+            
+            var result = Object.values(merged);
+            var result = Object.values(merged);
+            result.sort(function(a, b) {
+                return normalizeTimestamp(a.timestamp) - normalizeTimestamp(b.timestamp);
+            });
+            
+            return result;
+        }).catch(function() {
+            return apiMessages;
         });
     }
 
     function fallbackToLastMessage(chatId) {
         var container = _$('wa-messages-container');
         if (!container) return;
-        var chat = state.chats.find(function(c) { return (c.id._serialized || c.id) === chatId; });
         
+        // PRIMA: Prova database locale
+        api('GET', 'WhatsAppMessage', {
+            where: [{
+                type: 'equals',
+                attribute: 'chatId',
+                value: chatId
+            }],
+            orderBy: 'timestamp',
+            order: 'desc',
+            maxSize: 50
+        }).then(function(r) {
+            if (r.list && r.list.length > 0) {
+                state.messages = r.list.reverse();
+                renderMessages(state.messages);
+                showSystemMessage('Loaded ' + r.list.length + ' messages from local storage.');
+                return;
+            }
+            // FALLBACK: lastMessage dalla chat list
+            fallbackToLastMessageFromList(chatId, container);
+        }).catch(function() {
+            fallbackToLastMessageFromList(chatId, container);
+        });
+    }
+
+    function fallbackToLastMessageFromList(chatId, container) {
+        var chat = state.chats.find(function(c) { return (c.id._serialized || c.id) === chatId; });
         var msgs = [];
         if (chat && chat.lastMessage && chat.lastMessage.body) {
             var lm = chat.lastMessage;
@@ -407,13 +667,19 @@
         
         if (msgs.length) {
             renderMessages(msgs);
-            var div = document.createElement('div');
-            div.className = 'wa-system-message';
-            div.textContent = 'History fetched from device. Older messages may be unavailable via API.';
-            container.appendChild(div);
+            showSystemMessage('History fetched from device. Older messages may be unavailable via API.');
         } else {
             container.innerHTML = '<div class="wa-empty-state"><p>No messages yet</p></div>';
         }
+    }
+    
+    function showSystemMessage(text) {
+        var container = _$('wa-messages-container');
+        if (!container) return;
+        var div = document.createElement('div');
+        div.className = 'wa-system-message';
+        div.textContent = text;
+        container.appendChild(div);
     }
 
     function sendMessage() {
@@ -451,12 +717,13 @@
         }
 
         el.innerHTML = chats.map(function (c) {
-            var name = c.name || (c.contact && c.contact.pushname) || 'Unknown';
+            var chatId = c.id._serialized || c.id;
+            var name = c.name || extractPhoneNumber(chatId);
             var last = (c.lastMessage && c.lastMessage.body) || '';
             var time = (c.lastMessage && c.lastMessage.timestamp) ? formatTime(c.lastMessage.timestamp) : '';
-            var cid = (c.id && c.id._serialized) || c.id || '';
-            return '<li class="wa-chat-item" data-cid="' + esc(cid) + '" data-cname="' + esc(name) + '">' +
-                '<div class="wa-chat-avatar"><span>' + esc(name[0]) + '</span></div>' +
+            
+            return '<li class="wa-chat-item" data-cid="' + esc(chatId) + '" data-cname="' + esc(name) + '">' +
+                getAvatarHtml(c, 42) + 
                 '<div class="wa-chat-info"><div class="wa-chat-name">' + esc(name) + '</div>' +
                 '<div class="wa-chat-last-msg">' + esc(last) + '</div></div>' +
                 '<div class="wa-chat-meta"><div class="wa-chat-time">' + esc(time) + '</div></div>' +
@@ -482,15 +749,27 @@
              });
         }
 
-        if (!contacts.length) { el.innerHTML = '<div class="wa-empty-state"><p>No contacts</p></div>'; return; }
+        _$('wa-contacts-list').innerHTML = '';
+        
+        window.waDebugContacts = contacts; // DEBUG: Expose to window
+        
+        if (!contacts || contacts.length === 0) {
+            _$('wa-contacts-list').innerHTML = '<div class="wa-empty-state">No contacts found.</div>';
+            return;
+        }
         
         el.innerHTML = contacts.map(function(c) {
              var name = c.name || c.pushname || c.number;
              var id = (c.id && c.id._serialized) || c.id;
+             var isGroup = id && id.indexOf('@g.us') !== -1;
+             var number = c.number || extractPhoneNumber(id);
+             
+             var numberHtml = isGroup ? '' : '<div class="wa-contact-number">' + esc(number) + '</div>';
+             
              return '<li class="wa-contact-item" data-id="' + esc(id) + '" data-name="' + esc(name) + '">' +
-                    '<div class="wa-contact-avatar"><span>' + esc(name[0]) + '</span></div>' +
+                    getAvatarHtml(c, 42) +
                     '<div class="wa-contact-info"><div class="wa-contact-name">' + esc(name) + '</div>' +
-                    '<div class="wa-contact-number">' + esc(c.number) + '</div></div></li>';
+                    numberHtml + '</div></li>';
         }).join('');
         
         var items = el.querySelectorAll('.wa-contact-item');
@@ -499,13 +778,35 @@
         }
     }
 
+    function buildEmojiPicker() {
+        var emojis = [
+            '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+            '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+            '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔', '❣️', '💕',
+            '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉',
+            '🔥', '💧', '💫', '⭐', '🌟', '✨', '⚡', '☄️', '💥', '💢'
+            // Add more as needed
+        ];
+        
+        var html = '<div class="wa-emoji-grid">';
+        emojis.forEach(function(emoji) {
+            html += '<button class="wa-emoji-item" data-emoji="' + emoji + '">' + emoji + '</button>';
+        });
+        html += '</div>';
+        return html;
+    }
+
     function renderMessages(msgs) {
         var container = _$('wa-messages-container');
         if (!container) return;
-        var sorted = msgs.slice().sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
+        var sorted = msgs.slice().sort(function (a, b) { 
+            return normalizeTimestamp(a.timestamp) - normalizeTimestamp(b.timestamp);
+        });
         var html = '';
         sorted.forEach(function (m) {
-            var d = m.timestamp ? new Date(m.timestamp * 1000) : new Date();
+            var ms = normalizeTimestamp(m.timestamp);
+            var d = new Date(ms);
             var t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             html += '<div class="wa-message ' + (m.fromMe ? 'outgoing' : 'incoming') + '">' +
                 '<div class="wa-message-text">' + esc(m.body || '') + '</div>' +
@@ -581,6 +882,99 @@
         });
     }
 
+    function makeDraggable() {
+        var panel = _$('wa-panel-root'); // Root is the moving part
+        var header = panel.querySelector('.wa-panel-header');
+        if (!panel || !header) return;
+
+        var isDragging = false;
+        var currentX, currentY, initialX, initialY;
+        var xOffset = 0, yOffset = 0;
+
+        // Restore position
+        var savedPos = localStorage.getItem('wa-panel-position');
+        if (savedPos) {
+            try {
+                var pos = JSON.parse(savedPos);
+                // Root is fixed right/bottom by default.
+                // We need to switch to left/top or transform to move it freely
+                // Simplest is to set right/bottom to auto and use left/top, 
+                // OR use transform translate.
+                // But our CSS resize implementation sets width/height/right/bottom.
+                
+                // Let's use left/top overrides if we drag?
+                // Or manipulate existing right/bottom?
+                // Let's stick to Right/Bottom as base but modify them?
+                // Actually, standard drag uses left/top.
+                
+                // If we want to support both resize and drag, it gets tricky because resize depends on specific anchor (e.g. bottom-right).
+                // Let's assume we drag the WHOLE window.
+                
+                // Let's use transform for dragging to avoid fighting with resize layout?
+                // But resize changes dimensions.
+                
+                // Let's switch to left/top positioning once dragged?
+            } catch(e) {}
+        }
+        
+        header.style.cursor = 'move';
+        
+        header.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+            
+            // Calc initial offset
+            // We are using right/bottom css likely.
+            var rect = panel.getBoundingClientRect();
+            
+            // To make it draggable easily, we should switch to Left/Top based positioning?
+            // Or just modify Right/Bottom.
+            
+            // Let's try transform translate
+            if (!xOffset) xOffset = 0;
+            if (!yOffset) yOffset = 0;
+            
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            isDragging = true;
+            panel.classList.add('wa-dragging'); // Disable transitions
+            document.body.style.userSelect = 'none'; // Prevent text selection
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            setTranslate(currentX, currentY, panel);
+        }
+
+        function dragEnd(e) {
+            if (!isDragging) return;
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            
+            panel.classList.remove('wa-dragging');
+            document.body.style.userSelect = ''; // Restore text selection
+            
+            // Save?
+        }
+        
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+        }
+    }
+
     function buildPanel() {
         if (state.panelBuilt) return;
         state.panelBuilt = true;
@@ -590,7 +984,7 @@
         // Inner Panel Content
         var panelHtml = [
             '<div class="whatsapp-widget-panel" id="wa-panel">',
-            '  <div class="wa-panel-header">',
+            '  <div class="wa-panel-header" style="z-index:10001;position:relative;">',
             '    <button class="wa-back-btn" id="wa-back-btn">\u2190</button>',
             '    <div class="wa-header-info" style="flex:1">',
             '      <div class="wa-title" id="wa-panel-title">WhatsApp</div>',
@@ -617,6 +1011,7 @@
             '           <li>Open WhatsApp on your phone</li>',
             '           <li>Tap <strong>Menu</strong> or <strong>Settings</strong> and select <strong>Linked Devices</strong></li>',
             '           <li>Tap on <strong>Link a Device</strong></li>',
+            '           <li>Tap on <strong>Link a Device</strong></li>',
             '           <li>Point your phone to this screen to capture the code</li>',
             '         </ol>',
             '         <button class="wa-connect-btn" id="wa-connect-btn">Generate QR Code</button>',
@@ -641,9 +1036,11 @@
             '  <div class="wa-screen" id="wa-screen-chat">',
             '     <div class="wa-messages-container" id="wa-messages-container"></div>',
             '     <div class="wa-send-box">',
+            '        <button id="wa-emoji-btn" class="wa-emoji-btn" title="Emoji"><i class="far fa-smile"></i></button>',
             '        <input type="text" id="wa-message-input" autocomplete="off" placeholder="Type a message\u2026">',
             '        <button class="wa-send-btn" id="wa-send-btn">' + SEND_SVG + '</button>',
             '     </div>',
+            '     <div id="wa-emoji-picker" class="wa-emoji-picker" style="display:none;">' + buildEmojiPicker() + '</div>',
             '  </div>',
             
             '  <div class="wa-screen" id="wa-screen-contacts">',
@@ -731,10 +1128,32 @@
         }
         var sendBtn = _$('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
         var msgInput = _$('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
-        var lootBtn = _$('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { api('POST', 'WhatsApp/action/logout').then(function() { 
-             state.status = 'DISCONNECTED'; checkStatus(); 
-        }); };
+        var lootBtn = _$('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { logout(); }; // Use new logout function
         var searchInp = _$('wa-search-input'); if(searchInp) searchInp.onkeyup = function() { renderChatList(state.chats); };
+        
+        // Emoji Events
+        var emoBtn = _$('wa-emoji-btn'); 
+        if(emoBtn) emoBtn.onclick = function(e) {
+            var picker = _$('wa-emoji-picker');
+            if (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+        };
+        
+        // Emoji selection delegation
+        var picker = _$('wa-emoji-picker');
+        if (picker) {
+            picker.addEventListener('click', function(e) {
+                if (e.target.classList.contains('wa-emoji-item')) {
+                    var emoji = e.target.getAttribute('data-emoji');
+                    var input = _$('wa-message-input');
+                    if (input) {
+                        input.value += emoji;
+                        input.focus();
+                    }
+                    // Optional: close picker
+                    // picker.style.display = 'none';
+                }
+            });
+        }
         
         // New Chat Button (in Header)
         var newChatBtn = _$('wa-btn-new-chat'); 
@@ -747,8 +1166,13 @@
         // Theme Toggle
         var themeBtn = _$('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
 
-        // Ensure updateTheme checks immediately after build
+        // Ensure updateTheme check immediately
         setTimeout(updateTheme, 0);
+        
+        makeDraggable(); 
+        
+        // Init Draggable
+        makeDraggable();
     }
 
     /* ── Renderers ──────────────────────────────────────────────── */
