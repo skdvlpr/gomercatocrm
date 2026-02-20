@@ -130,6 +130,17 @@ class WhatsAppClient
         return $response['success'] ?? false;
     }
 
+    public function getProfilePicUrl(string $contactId): ?string
+    {
+        $response = $this->makeRequest('POST', "/client/getProfilePicUrl/{$this->sessionId}", ['contactId' => $contactId]);
+
+        if (isset($response['success']) && $response['success'] && isset($response['result'])) {
+            return $response['result'];
+        }
+
+        return null;
+    }
+
     private function makeRequest(string $method, string $endpoint, ?array $data = null): array
     {
         $url = $this->getApiUrl() . $endpoint;

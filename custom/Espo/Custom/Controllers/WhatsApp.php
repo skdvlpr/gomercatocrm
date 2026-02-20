@@ -108,7 +108,47 @@ class WhatsApp extends Base
 
     public function getActionGetProfilePic(Request $request, Response $response): array
     {
-        // Feature temporarily disabled as API does not support it yet.
+        $id = $request->getQueryParam('id');
+        if (!$id) {
+            return ['url' => null];
+        }
+
+        // Check local cache first to avoid hammering the API/CDN
+        $filename = 'wa-avatar-' . md5($id) . '.jpg';
+        $path = 'client/custom/whatsapp-avatars/' . $filename;
+        $fullPath = rtrim($this->getContainer()->get('config')->get('siteUrl'), '/') . '/' . $path;
+
+        if (file_exists($path)) {
+            // Cache valid for 7 days
+            if (time() - filemtime($path) < 604800) {
+                return ['url' => $fullPath . '?v=' . filemtime($path)];
+            }
+        }
+
+        // 1. Get temporary CDN URL from WhatsApp Client
+        $url = $this->getWhatsAppClient()->getProfilePicUrl($id);
+
+        if ($url) {
+            // 2. Download the image locally to bypass CORS and expiration
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            // Some CDNs require user agent
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            $imageData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200 && $imageData) {
+                if (!is_dir(dirname($path))) {
+                    mkdir(dirname($path), 0755, true);
+                }
+                file_put_contents($path, $imageData);
+                return ['url' => $fullPath . '?v=' . time()];
+            }
+        }
+
         return ['url' => null];
     }
 
