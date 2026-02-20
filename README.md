@@ -1,4 +1,5 @@
 # GoMercato CRM
+
 ![GoMercato Logo](https://www.gomercato.it/_next/image?url=%2Fimg%2Flogo-long-gray.png&w=384&q=75)
 
 EspoCRM customized for GoMercato.
@@ -61,15 +62,17 @@ This is the core of the client-side logic. It does not use EspoCRM's standard Vi
 
 - **Initialization**: Injected automatically on page load. It builds a floating action button (`#whatsapp-floating-btn`).
 - **State Management**: Maintains local state for `isOpen`, `chatId`, `chats` list, and `messages`.
-- **Polling**:
+- **Polling & lazy loading**:
   - **Status Loop**: Checks `WhatsApp/action/status` every 5-30 seconds to update connectivity icons (Red/Green dot).
   - **Chat Loop**: When open, polls `WhatsApp/action/getChats` to keep the list updated.
+  - **Avatars**: Uses `IntersectionObserver` to lazily load contact profile pictures only when they scroll into view, preventing network resource exhaustion.
 - **UI Layers**:
   - **Login Screen**: Displays QR code for authentication.
   - **Chat List**: Searchable list of active conversations.
-  - **Contact List**: Searchable list of all contacts for starting new chats.
-  - **Chat View**: Message history and input area.
-- ** key features**:
+  - **Contact List**: Searchable, deduplicated list of all phonebook contacts for starting new chats.
+  - **Chat View**: Message history, Emoji Picker, and input area.
+- **Key features**:
+  - **Draggable & Snapping**: The widget panel can be dragged around the screen and magnetically snaps to window edges.
   - **Cache Busting**: Uses timestamps to force CSS/JS updates.
   - **Autocomplete Disabled**: Forces `autocomplete="off"` on all inputs to prevent browser interference.
   - **Scroll Management**: Manages `overflow-y` for smooth list scrolling.
@@ -83,7 +86,8 @@ Handles all API requests from the widget.
   - `actionLogin`: Initiates the Puppeteer/WhatsApp session.
   - `actionQrCode`: Returns the QR code image data (base64).
   - `actionGetChats`: Returns a list of recent chats with last messages.
-  - `actionGetContacts`: Returns a list of phonebook contacts.
+  - `actionGetContacts`: Returns a deduplicated list of phonebook contacts.
+  - `actionGetProfilePic`: Proxies profile picture downloads from WhatsApp CDN to local cache (`client/custom/whatsapp-avatars/`) to bypass CORS and expiration issues.
   - `actionGetChatMessages`: Returns message history for a specific `chatId`.
   - `actionSendMessage`: Sends a text message to a `chatId`.
   - `actionLogout`: Destroys the current session.

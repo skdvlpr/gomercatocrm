@@ -82,38 +82,42 @@
         var seen = {};
         var unique = [];
         
-        // 1. Filter out @lid contacts if possible, or merge them.
-        // Actually, @lid are alternate IDs for the same person. We usually want @c.us.
-        // Also groups are @g.us.
-        
         contacts.forEach(function(contact) {
             var id = (contact.id && contact.id._serialized) || contact.id;
+            if (!id || typeof id !== 'string') return;
             
-            // SKIP @lid identities to avoid duplicates
-            if (id && id.indexOf('@lid') !== -1) return;
-            
-            // For groups, we might want to keep them but maybe format name?
-            // User said: "Hide Postfix @..." for groups? 
-            // extractPhoneNumber already strips @g.us, so display is fine.
-            
-            // Deduplicate by clean number/id
+            // Skip technical IDs and alternative @lid endpoints
+            if (id.indexOf('@lid') !== -1 || id === 'status@broadcast') return;
+
             var phone = extractPhoneNumber(id);
+            var isGroup = id.indexOf('@g.us') !== -1;
+            
+            // Groups are unique enough by ID, keep them
+            if (isGroup) {
+                if (!seen[id]) {
+                    seen[id] = contact;
+                    unique.push(contact);
+                }
+                return;
+            }
+
+            // Normal contacts: index by their explicit phone number to merge duplicates like +39123 vs 39123@c.us
             if (!seen[phone]) {
-                seen[phone] = true;
+                seen[phone] = contact;
                 unique.push(contact);
             } else {
-                // If we already have this number, check if this new one has a better name?
-                // The current iteration usually works fine if we just skip @lid.
-                var existingIndex = unique.findIndex(function(c) {
-                    return extractPhoneNumber(c.id) === phone;
-                });
+                // We already have an entry for this phone. Does the *new* contact have a better name?
+                var existing = seen[phone];
+                var existingHasName = !!(existing.name || existing.pushname);
+                var newHasName = !!(contact.name || contact.pushname);
                 
-                if (existingIndex !== -1) {
-                     var existing = unique[existingIndex];
-                     // If existing has no name but new one does, swap
-                     if ((!existing.name && !existing.pushname) && (contact.name || contact.pushname)) {
-                         unique[existingIndex] = contact;
-                     }
+                if (!existingHasName && newHasName) {
+                    // Swap the object in the unique array
+                    var idx = unique.indexOf(existing);
+                    if (idx !== -1) {
+                        unique[idx] = contact;
+                        seen[phone] = contact; // update reference
+                    }
                 }
             }
         });
@@ -145,38 +149,60 @@
         return colors[Math.abs(hash) % colors.length];
     }
 
+    var avatarObserver = null;
+    function initAvatarObserver() {
+        if (!window.IntersectionObserver || avatarObserver) return;
+        avatarObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    var el = entry.target;
+                    var id = el.getAttribute('data-wa-avatar-id');
+                    if (id && (!state.avatarCache || state.avatarCache[id] === undefined)) {
+                        loadAvatar(id);
+                    }
+                    avatarObserver.unobserve(el);
+                    el.classList.remove('wa-lazy-avatar');
+                }
+            });
+        }, { root: null, rootMargin: '150px' });
+        
+        var mo = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
+                m.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) {
+                        if (node.classList.contains('wa-lazy-avatar')) avatarObserver.observe(node);
+                        var lazies = node.querySelectorAll('.wa-lazy-avatar');
+                        for (var i=0; i<lazies.length; i++) avatarObserver.observe(lazies[i]);
+                    }
+                });
+            });
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+    }
+
     function getAvatarHtml(contact, size) {
         size = size || 40;
         var id = (contact.id && contact.id._serialized) ? contact.id._serialized : (contact.id || '');
         var name = contact.name || contact.pushname || extractPhoneNumber(id);
         var initials = getInitials(name);
         var color = stringToColor(name);
-        
         var picUrl = null;
         
-        // Check cache first
         if (state.avatarCache && state.avatarCache[id]) {
              picUrl = state.avatarCache[id];
-        } else if (contact.profilePicThumbObj && contact.profilePicThumbObj.eurl) {
-            picUrl = contact.profilePicThumbObj.eurl;
-        } else if (contact.profilePicUrl) {
-            picUrl = contact.profilePicUrl;
-        } else {
-            // Lazy load
-            if (id) {
-                setTimeout(function() { loadAvatar(id); }, 0);
-            }
         }
         
+        var lazyClass = (!picUrl && id) ? ' wa-lazy-avatar' : '';
+        
         if (picUrl) {
-            return '<div class="wa-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
-                '<img src="' + esc(picUrl) + '" alt="' + esc(name) + '" ' +
-                'onerror="this.style.display=\\\'none\\\';this.nextElementSibling.style.display=\\\'flex\\\';">' +
+            return '<div class="wa-avatar" data-wa-avatar-id="' + esc(id) + '" style="width:' + size + 'px;height:' + size + 'px;">' +
+                '<img class="wa-avatar-img" src="' + esc(picUrl) + '" alt="' + esc(name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" ' +
+                'onerror="this.style.display=\'none\'; if(this.nextElementSibling) this.nextElementSibling.style.display=\'flex\';">' +
                 '<div class="wa-avatar-initials" style="display:none;background:' + color + ';width:100%;height:100%;line-height:' + size + 'px;font-size:' + (size/2) + 'px;">' + initials + '</div>' + 
             '</div>';
         }
         
-        return '<div class="wa-avatar" id="wa-avatar-' + esc(id) + '" style="width:' + size + 'px;height:' + size + 'px;">' +
+        return '<div class="wa-avatar' + lazyClass + '" data-wa-avatar-id="' + esc(id) + '" style="width:' + size + 'px;height:' + size + 'px;">' +
             '<div class="wa-avatar-initials" style="background:' + color + ';width:' + size + 'px;height:' + size + 'px;line-height:' + size + 'px;font-size:' + (size/2) + 'px;">' +
                 initials +
             '</div>' +
@@ -190,20 +216,46 @@
         state.avatarCache[id] = null; // Mark as fetching/empty
         
         api('GET', 'WhatsApp/action/getProfilePic', { id: id }).then(function(r) {
-            if (r.url) {
+            if (r && r.url) {
                 state.avatarCache[id] = r.url;
-                // Update DOM if exists
-                var el = document.getElementById('wa-avatar-' + id);
-                if (el) {
-                    el.innerHTML = '<img src="' + esc(r.url) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                
+                // Use DOM safe query to update all instances of this avatar across the UI
+                var els = document.querySelectorAll('[data-wa-avatar-id="' + CSS.escape(id) + '"]');
+                for (var i = 0; i < els.length; i++) {
+                    var el = els[i];
+                    var initDiv = el.querySelector('.wa-avatar-initials');
+                    if (initDiv) {
+                        // Remove any old broken image
+                        var oldImg = el.querySelector('img');
+                        if (oldImg) oldImg.remove();
+                        
+                        var img = document.createElement('img');
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '50%';
+                        img.style.display = 'none'; // hide until loaded
+                        
+                        img.onload = function() {
+                            this.style.display = 'block';
+                            if (this.nextElementSibling) {
+                                this.nextElementSibling.style.display = 'none';
+                            }
+                        };
+                        
+                        img.onerror = function() {
+                            this.style.display = 'none';
+                            if (this.nextElementSibling) {
+                                this.nextElementSibling.style.display = 'flex';
+                            }
+                        };
+                        
+                        img.src = r.url;
+                        el.insertBefore(img, initDiv);
+                    }
                 }
-                // Check Chat List avatars too (they might not have IDs but we can select by data-cid?)
-                // Actually getAvatarHtml is used in chat list too.
-                // We need a way to update chat list avatars.
-                // Chat list items usually redraw fully on render.
-                // But if we are live, we can try to update specific elements.
             }
-        });
+        }).catch(function() {});
     }
 
     function normalizeTimestamp(ts) {
@@ -548,9 +600,7 @@
         var list = _$('wa-contacts-list');
         if (list) list.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
         api('GET', 'WhatsApp/action/getContacts').then(function(r) {
-            console.log('Raw contacts:', r.list);
             state.contacts = deduplicateContacts(r.list || []); // DEDUPLICATE
-            console.log('Deduplicated contacts:', state.contacts);
             renderContacts(state.contacts);
         });
     }
@@ -1226,6 +1276,7 @@
             setTimeout(init, 500); return;
         }
         state.initialized = true;
+        initAvatarObserver();
         buildButton(); // Button is built, panel is built heavily lazy or on click
         
         // Check status
