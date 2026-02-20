@@ -1,4 +1,4 @@
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream.tpl
 <div class="page-header">
     <div class="row">
@@ -60,16 +60,16 @@ res/templates/stream.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/merge.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="body">{{{body}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/logout-wait.tpl
 <div></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/login.tpl
 <div class="container content">
     <div class="container-centering">
@@ -164,7 +164,7 @@ res/templates/login.tpl
 </div>
 <footer>{{{footer}}}</footer>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/login-second-step.tpl
 <div class="container content">
     <div class="container-centering">
@@ -209,13 +209,13 @@ res/templates/login-second-step.tpl
 </div>
 <footer>{{{footer}}}</footer>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/list.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="search-container">{{{search}}}</div>
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/list-with-categories.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="search-container">{{{search}}}</div>
@@ -236,11 +236,11 @@ res/templates/list-with-categories.tpl
 <div class="list-container">{{{list}}}</div>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/home.tpl
 <div class="home-content">{{{content}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/header.tpl
 <div class="page-header-row">
     <div class="{{#if noBreakWords}} no-break-words{{/if}} page-header-column-1">
@@ -334,12 +334,12 @@ res/templates/header.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/edit.tpl
 <div class="header page-header">{{{header}}}</div>
 <div class="record">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/detail.tpl
 <div class="header page-header">{{{header}}}</div>
 {{#if modes}}
@@ -348,7 +348,7 @@ res/templates/detail.tpl
 <div class="record">{{{record}}}</div>
 <div class="bottom">{{{bottom}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/dashlet.tpl
 <div
   id="dashlet-{{id}}"
@@ -410,7 +410,7 @@ res/templates/dashlet.tpl
     <div class="dashlet-body panel-body{{#if noPadding}} no-padding{{/if}}">{{{body}}}</div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/dashboard.tpl
 <div class="page-header dashboard-header">
     <div class="row">
@@ -460,7 +460,7 @@ res/templates/dashboard.tpl
 </div>
 <div class="dashlets grid-stack grid-stack-12">{{{dashlets}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/clear-cache.tpl
 <div class="row">
     <div class="col-md-6 col-sm-offset-2">
@@ -485,7 +485,7 @@ res/templates/clear-cache.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/about.tpl
 <div class="page-header">
     <h3>{{translate 'About'}}</h3>
@@ -512,7 +512,7 @@ res/templates/about.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/wysiwyg/modals/insert-link.tpl
 <div class="panel panel-default no-side-margin">
     <div class="panel-body">
@@ -537,7 +537,7 @@ res/templates/wysiwyg/modals/insert-link.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/wysiwyg/modals/insert-image.tpl
 <div class="panel panel-default no-side-margin">
     <div class="panel-body">
@@ -579,7 +579,7 @@ res/templates/wysiwyg/modals/insert-image.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user-security/modals/two-factor-sms.tpl
 <div class="panel no-side-margin">
     <div class="panel-body">
@@ -597,7 +597,7 @@ res/templates/user-security/modals/two-factor-sms.tpl
 
 <div class="record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user-security/modals/two-factor-email.tpl
 <div class="panel no-side-margin">
     <div class="panel-body">
@@ -615,7 +615,7 @@ res/templates/user-security/modals/two-factor-email.tpl
 
 <div class="record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user-security/modals/totp.tpl
 <div class="panel no-side-margin">
     <div class="panel-body">
@@ -630,7 +630,7 @@ res/templates/user-security/modals/totp.tpl
 
 <div class="record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user/password-change-request.tpl
 <div class="container content">
     <div class="block-center">
@@ -682,7 +682,7 @@ res/templates/user/password-change-request.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user/modals/access.tpl
 <div class="panel panel-default no-side-margin">
     <div class="panel-body">
@@ -703,10 +703,10 @@ res/templates/user/modals/access.tpl
 
 <div class="user-access-table no-side-margin">{{{table}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user/fields/name/list.tpl
 {{{avatar}}} {{value}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/user/fields/name/list-link.tpl
 {{{avatar}}}<a
     href="#{{frontScope}}/view/{{model.id}}"
@@ -715,7 +715,7 @@ res/templates/user/fields/name/list-link.tpl
     title="{{value}}"
 >{{value}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/template/fields/variables/edit.tpl
 <div class="input-group" style="table-layout: fixed; width: 100%;">
     <span class="input-group-item" style="width: 40%;">
@@ -729,10 +729,10 @@ res/templates/template/fields/variables/edit.tpl
     </span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/template/fields/variables/detail.tpl
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/panel.tpl
 <div class="form-group post-container{{#if postDisabled}} hidden{{/if}}">
     <div class="textarea-container">{{{postField}}}</div>
@@ -772,7 +772,7 @@ res/templates/stream/panel.tpl
 {{/if}}
 <div class="list-container" data-role="stream">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/row-actions/default.tpl
     {{#if isEnabled}}
     <div class="list-row-buttons pull-right right">
@@ -811,7 +811,7 @@ res/templates/stream/row-actions/default.tpl
     </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/record/edit.tpl
 <div class="panel panel-default">
     <div class="panel-body panel-body-form">
@@ -847,7 +847,7 @@ res/templates/stream/record/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/update.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container">
@@ -917,7 +917,7 @@ res/templates/stream/notes/update.tpl
     <a class="text-muted small" href="#Note/view/{{model.id}}">{{{createdAt}}}</a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/status.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container">
@@ -942,7 +942,7 @@ res/templates/stream/notes/status.tpl
     <a class="text-muted small" href="#Note/view/{{model.id}}">{{{createdAt}}}</a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/post.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container">
@@ -985,7 +985,7 @@ res/templates/stream/notes/post.tpl
     <div class="reactions-container">{{{reactions}}}</div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/email-received.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container cell-buttons">
@@ -1054,7 +1054,7 @@ res/templates/stream/notes/email-received.tpl
     {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/create.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container cell-buttons">
@@ -1081,7 +1081,7 @@ res/templates/stream/notes/create.tpl
     <a class="text-muted small" href="#Note/view/{{model.id}}">{{{createdAt}}}</a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/create-related.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container cell-buttons">
@@ -1102,7 +1102,7 @@ res/templates/stream/notes/create-related.tpl
     <a class="text-muted small" href="#Note/view/{{model.id}}">{{{createdAt}}}</a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/stream/notes/assign.tpl
 {{#unless noEdit}}
 <div class="pull-right right-container">
@@ -1122,7 +1122,7 @@ res/templates/stream/notes/assign.tpl
     <a class="text-muted small" href="#Note/view/{{model.id}}">{{{createdAt}}}</a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/site/navbar.tpl
 <div class="navbar navbar-inverse" role="navigation">
     <div class="navbar-header">
@@ -1343,7 +1343,7 @@ res/templates/site/navbar.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/site/master.tpl
 <header id="header">{{{header}}}</header>
 <div id="content" class="container content">
@@ -1352,11 +1352,11 @@ res/templates/site/master.tpl
 <footer id="footer">{{{footer}}}</footer>
 <div class="collapsed-modal-bar"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/site/header.tpl
 <div id="navbar">{{{navbar}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/site/footer.tpl
 <p class="credit small">&copy; 2026
 <a
@@ -1366,7 +1366,7 @@ res/templates/site/footer.tpl
     tabindex="-1"
 >EspoCRM, Inc.</a></p>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/settings/fields/dashboard-layout/edit.tpl
 <div class="button-container clearfix">
     <button
@@ -1395,7 +1395,7 @@ res/templates/settings/fields/dashboard-layout/edit.tpl
 
 <div class="grid-stack grid-stack-12"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/settings/fields/dashboard-layout/detail.tpl
 {{#if isEmpty}}
 <span class="none-value">{{translate 'None'}}</span>
@@ -1417,7 +1417,7 @@ res/templates/settings/fields/dashboard-layout/detail.tpl
 
 <div class="grid-stack grid-stack-12"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/settings/fields/currency-rates/edit.tpl
 {{#each rateValues}}
     <div class="input-group">
@@ -1436,7 +1436,7 @@ res/templates/settings/fields/currency-rates/edit.tpl
     </div>
 {{/each}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/search/filter.tpl
 <div class="form-group">
     <a
@@ -1449,7 +1449,7 @@ res/templates/search/filter.tpl
     <div class="field" data-name="{{name}}">{{{field}}}</div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/scheduled-job/cronjob.tpl
 <div class="cronjob well">
     <div class="message">&nbsp;</div>
@@ -1459,7 +1459,7 @@ res/templates/scheduled-job/cronjob.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/role/table.tpl
 
 <div class="button-container negate-no-side-margin">
@@ -1589,7 +1589,7 @@ res/templates/role/table.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/role/table-edit.tpl
 
 <div class="button-container">
@@ -1739,11 +1739,11 @@ res/templates/role/table-edit.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/role/record/panels/side.tpl
 <span class="text-danger">{{translate 'changesAfterClearCache' scope='Role' category='messages'}}</span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/role/modals/add-field.tpl
 <div class="button-container negate-no-side-margin">
     <input
@@ -1783,7 +1783,7 @@ res/templates/role/modals/add-field.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/side.tpl
 {{#each panelList}}
     {{#if isRightAfterDelimiter}}
@@ -1835,7 +1835,7 @@ res/templates/record/side.tpl
     </div>
 {{/each}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/search.tpl
 
 <div class="row search-row">
@@ -2003,7 +2003,7 @@ res/templates/record/search.tpl
     </a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/panel-actions.tpl
 {{#each buttonList}}
     <button
@@ -2050,7 +2050,7 @@ res/templates/record/panel-actions.tpl
     </ul>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/merge.tpl
 
 <div class="merge">
@@ -2125,7 +2125,7 @@ res/templates/record/merge.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list.tpl
 {{#if hasStickyBar}}
     <div class="sticked-bar list-sticky-bar hidden">
@@ -2380,7 +2380,7 @@ res/templates/record/list.tpl
     {{/unless}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-tree.tpl
 
 {{#if topBar}}
@@ -2446,7 +2446,7 @@ res/templates/record/list-tree.tpl
     </ul>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-tree-item.tpl
 <div class="cell">
     <a
@@ -2502,7 +2502,7 @@ res/templates/record/list-tree-item.tpl
 </div>
 <div class="children{{#unless isUnfolded}} hidden{{/unless}}">{{{children}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-pagination.tpl
 <div class="btn-group pagination clearfix">
     <div class="btn-group">
@@ -2563,7 +2563,7 @@ res/templates/record/list-pagination.tpl
     ><span class="fas fa-chevron-right"></span></a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-nested-categories.tpl
 {{#unless isLoading}}
 <div class="list-nested-categories">
@@ -2692,7 +2692,7 @@ res/templates/record/list-nested-categories.tpl
 </div>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-expanded.tpl
 {{#if collection.models.length}}
     {{#if hasStickyBar}}
@@ -2781,7 +2781,7 @@ res/templates/record/list-expanded.tpl
     {{/unless}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/list-checkbox.tpl
 <span class="record-checkbox-container"><input
     type="checkbox"
@@ -2789,7 +2789,7 @@ res/templates/record/list-checkbox.tpl
     data-id="{{model.id}}"
 ></span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/kanban.tpl
 
 {{#if topBar}}
@@ -2883,7 +2883,7 @@ res/templates/record/kanban.tpl
     </div>
 {{/unless}}{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/kanban-item.tpl
 <div class="panel panel-default {{#if isStarred}} starred {{~/if}} ">
     <div class="panel-body">
@@ -2905,7 +2905,7 @@ res/templates/record/kanban-item.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/edit.tpl
 <div class="edit" id="{{id}}" data-scope="{{scope}}" tabindex="-1">
     {{#unless buttonsDisabled}}
@@ -2987,7 +2987,7 @@ res/templates/record/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/detail.tpl
 <div class="detail" id="{{id}}" data-scope="{{scope}}" tabindex="-1">
     {{#unless buttonsDisabled}}
@@ -3143,7 +3143,7 @@ res/templates/record/detail.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/bottom.tpl
 {{#each panelList}}
     {{#if isRightAfterDelimiter}}
@@ -3199,7 +3199,7 @@ res/templates/record/bottom.tpl
     </div>
 {{/each}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/row-actions/default.tpl
 {{#if actionList.length}}
 <div class="list-row-buttons btn-group pull-right">
@@ -3241,7 +3241,7 @@ res/templates/record/row-actions/default.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/panels/side.tpl
 {{#if fieldList.length}}
 <div class="row">
@@ -3265,11 +3265,11 @@ res/templates/record/panels/side.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/record/panels/relationship.tpl
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/preferences/fields/smtp-email-address/detail.tpl
 {{#if value}}
     {{value}}
@@ -3280,7 +3280,7 @@ res/templates/preferences/fields/smtp-email-address/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/personal-data/record/record.tpl
 {{#if fieldDataList.length}}
 <div class="panel">
@@ -3308,11 +3308,11 @@ res/templates/personal-data/record/record.tpl
 {{translate 'No Data'}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/personal-data/modals/personal-data.tpl
 <div class="record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/panel.tpl
 <div class="panel panel-default no-focus-outline" tabindex="-1">
     <div class="panel-heading panel-heading-no-title">
@@ -3330,7 +3330,7 @@ res/templates/notification/panel.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/list.tpl
 <div class="page-header">
     <div class="row">
@@ -3361,7 +3361,7 @@ res/templates/notification/list.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/badge.tpl
 <a role="button" tabindex="0" class="notifications-button" data-action="showNotifications">
     <span class="fas fa-bell icon bell"></span>
@@ -3369,7 +3369,7 @@ res/templates/notification/badge.tpl
 </a>
 <div class="notifications-panel-container"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/items/system.tpl
 <div class="stream-head-container">
 	<div class="stream-head-text-container text-danger">
@@ -3380,7 +3380,7 @@ res/templates/notification/items/system.tpl
     <span class="text-muted small">{{{createdAt}}}</span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/items/message.tpl
 <div class="stream-head-container">
     <div class="pull-left">
@@ -3397,7 +3397,7 @@ res/templates/notification/items/message.tpl
     <span class="text-muted small">{{{createdAt}}}</span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/items/entity-removed.tpl
 <div class="stream-head-container">
     <div class="pull-left">
@@ -3412,7 +3412,7 @@ res/templates/notification/items/entity-removed.tpl
     <span class="text-muted small">{{{createdAt}}}</span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/items/email-received.tpl
 <div class="stream-head-container">
     <div class="pull-left">
@@ -3442,7 +3442,7 @@ res/templates/notification/items/email-received.tpl
     <span class="text-muted small">{{{createdAt}}}</span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/items/assign.tpl
 <div class="stream-head-container">
     <div class="pull-left">
@@ -3456,13 +3456,13 @@ res/templates/notification/items/assign.tpl
     <span class="text-muted small">{{{createdAt}}}</span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/fields/read.tpl
 {{#unless isRead}}
     <span class="badge-circle badge-circle-warning"> </span>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/fields/read-with-menu.tpl
     <div class="list-row-buttons pull-right">
         <div class="btn-group">
@@ -3484,7 +3484,7 @@ res/templates/notification/fields/read-with-menu.tpl
     <span class="badge-circle badge-circle-warning"></span>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/notification/fields/container.tpl
 <div class="notification-container">{{{notification}}}</div>
 {{#if hasGrouped}}
@@ -3501,12 +3501,12 @@ res/templates/notification/fields/container.tpl
     </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/select-records.tpl
 <div class="search-container margin-bottom">{{{search}}}</div>
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/select-records-with-categories.tpl
 <div class="search-container margin-bottom">{{{search}}}</div>
 
@@ -3519,7 +3519,7 @@ res/templates/modals/select-records-with-categories.tpl
 <div class="list-container">{{{list}}}</div>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/save-filters.tpl
 <div class="panel panel-default no-side-margin">
 <div class="panel-body">
@@ -3534,12 +3534,12 @@ res/templates/modals/save-filters.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/related-list.tpl
 <div class="search-container">{{{search}}}</div>
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/password-change-request.tpl
 <div class="panel panel-default no-side-margin">
 <div class="panel-body">
@@ -3578,7 +3578,7 @@ res/templates/modals/password-change-request.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/mass-update.tpl
 <div class="panel panel-default no-side-margin">
 <div class="panel-body{{#if fieldList}} panel-body-form{{/if}}">
@@ -3618,7 +3618,7 @@ res/templates/modals/mass-update.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/mass-convert-currency.tpl
 <div class="panel panel-default no-side-margin">
 <div class="panel-body">
@@ -3644,17 +3644,17 @@ res/templates/modals/mass-convert-currency.tpl
 
 </div>
 </div>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/mass-action.tpl
 <div class="record no-side-margin">{{{record}}}</div>
 
 <div class="well info-text">{{complexText infoText}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/last-viewed.tpl
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/kanban-move-over.tpl
 <ul class="list-group no-side-margin">
 {{#each optionDataList}}
@@ -3664,13 +3664,13 @@ res/templates/modals/kanban-move-over.tpl
 {{/each}}
 </ul>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/image-preview.tpl
 <div style="text-align: center;" class="image-container">
     <img src="{{url}}" style="max-width: 100%;">
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/image-crop.tpl
 <link href="{{basePath}}client/css/cropper.css" rel="stylesheet">
 <div class="row">
@@ -3685,11 +3685,11 @@ res/templates/modals/image-crop.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/edit.tpl
 <div class="edit-container record no-side-margin">{{{edit}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/edit-dashboard.tpl
 <div class="no-side-margin record">
     <div>
@@ -3729,7 +3729,7 @@ res/templates/modals/edit-dashboard.tpl
 </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/duplicate.tpl
 <h4>{{translate 'duplicate' category="messages"}}</h4>
 
@@ -3753,11 +3753,11 @@ res/templates/modals/duplicate.tpl
     {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/detail.tpl
 <div class="record-container record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/change-password.tpl
 <div class="no-side-margin record">
     <div>
@@ -3801,7 +3801,7 @@ res/templates/modals/change-password.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/array-field-add.tpl
 {{#unless optionDataList}}
     {{translate 'No Data'}}
@@ -3839,7 +3839,7 @@ res/templates/modals/array-field-add.tpl
 
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/add-dashlet.tpl
 <div class="margin-bottom-2x margin-top">
     <input
@@ -3867,12 +3867,12 @@ res/templates/modals/add-dashlet.tpl
 
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/modals/action-history.tpl
 <div class="search-container">{{{search}}}</div>
 <div class="list-container">{{{list}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/lead-capture/opt-in-confirmation-success.tpl
 <div class="container content">
     <div class="block-center-md">
@@ -3892,7 +3892,7 @@ res/templates/lead-capture/opt-in-confirmation-success.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/lead-capture/opt-in-confirmation-expired.tpl
 <div class="container content">
     <div class="block-center-md">
@@ -3906,7 +3906,7 @@ res/templates/lead-capture/opt-in-confirmation-expired.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/import/step-2.tpl
 <h4>{{translate 'Step 2' scope='Import'}}</h4>
 
@@ -3959,7 +3959,7 @@ res/templates/import/step-2.tpl
         >{{translate 'Run Import' scope='Import'}}</button>
     </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/import/step-1.tpl
 <h4>{{translate 'Step 1' scope='Import'}}</h4>
 
@@ -4129,7 +4129,7 @@ res/templates/import/step-1.tpl
     </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/import/index.tpl
 <div class="page-header">
 	<div class="row">
@@ -4155,11 +4155,11 @@ res/templates/import/index.tpl
 </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/global-search/scope-badge.tpl
 <span class="text-muted">{{{label}}}</span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/global-search/panel.tpl
 <div class="panel panel-default">
     <div class="panel-heading panel-heading-no-title">
@@ -4175,11 +4175,11 @@ res/templates/global-search/panel.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/global-search/name-field.tpl
 {{{iconHtml}}}<a href="#{{scope}}/view/{{id}}">{{name}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/global-search/global-search.tpl
 <div class="input-group has-feedback">
     <input
@@ -4201,7 +4201,7 @@ res/templates/global-search/global-search.tpl
 </div>
 <div class="global-search-panel-container"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/wysiwyg/edit.tpl
 <textarea
 	class="main-element form-control hidden auto-height"
@@ -4212,7 +4212,7 @@ res/templates/fields/wysiwyg/edit.tpl
 ></textarea>
 <div class="summernote hidden"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/wysiwyg/detail.tpl
 {{#unless isPlain}}
     {{#if useIframe}}
@@ -4227,7 +4227,7 @@ res/templates/fields/wysiwyg/detail.tpl
 {{/unless}}
 {{#if isNone}}<span class="none-value">{{translate 'None'}}</span>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/varchar/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='varcharSearchRanges'}}
@@ -4249,7 +4249,7 @@ res/templates/fields/varchar/search.tpl
     <input data-role="multi-select-input">
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/varchar/list.tpl
 {{#if value~}}
     <span
@@ -4258,7 +4258,7 @@ res/templates/fields/varchar/list.tpl
     >{{value}}</span>
 {{~/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/varchar/detail.tpl
 {{#if isNotEmpty~}}
     {{~#if copyToClipboard~}}
@@ -4275,13 +4275,13 @@ res/templates/fields/varchar/detail.tpl
 <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/user-with-avatar/list.tpl
 {{#if idValue}}
 {{{avatar}}}<a href="#{{foreignScope}}/view/{{idValue}}" title="{{nameValue}}" class="text-default">{{nameValue}}</a>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/user-with-avatar/detail.tpl
 {{#if idValue}}
 {{{avatar}}}<a href="#{{foreignScope}}/view/{{idValue}}" class="text-default">{{nameValue}}</a>
@@ -4289,7 +4289,7 @@ res/templates/fields/user-with-avatar/detail.tpl
     <span class="none-value">{{translate 'None'}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/user/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='searchRanges'}}
@@ -4371,7 +4371,7 @@ res/templates/fields/user/search.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/url/list.tpl
 {{#if value}}
 	<a
@@ -4383,7 +4383,7 @@ res/templates/fields/url/list.tpl
     >{{value}}</a>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/url/detail.tpl
 {{#if value~}}
     {{~#if copyToClipboard~}}
@@ -4404,7 +4404,7 @@ res/templates/fields/url/detail.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/text/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='varcharSearchRanges'}}
@@ -4420,7 +4420,7 @@ res/templates/fields/text/search.tpl
     placeholder="{{translate 'Value'}}"
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/text/list.tpl
 {{#if isNotEmpty}}
 <div
@@ -4438,7 +4438,7 @@ res/templates/fields/text/list.tpl
 ><span class="fas fa-sm fa-chevron-down"></span> <span class="text">{{translate 'See more'}}</span></a></div>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/text/edit.tpl
 <textarea
 	class="main-element form-control auto-height"
@@ -4459,7 +4459,7 @@ res/templates/fields/text/edit.tpl
     </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/text/detail.tpl
 {{#if isNotEmpty}}
 <div
@@ -4482,7 +4482,7 @@ res/templates/fields/text/detail.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/range-int/edit.tpl
 <div class="row">
     <div class="col-sm-6 col-xs-6">
@@ -4493,10 +4493,10 @@ res/templates/fields/range-int/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/range-int/detail.tpl
 {{{value}}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/range-currency/edit.tpl
 <div class="row">
     <div class="col-sm-6 col-xs-6">
@@ -4512,7 +4512,7 @@ res/templates/fields/range-currency/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/phone/list.tpl
 {{#if isErased}}
     {{value}}
@@ -4531,7 +4531,7 @@ res/templates/fields/phone/list.tpl
 {{/unless}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/phone/edit.tpl
 <div class="phone-number-block-container">
 {{#each phoneNumberData}}
@@ -4613,7 +4613,7 @@ res/templates/fields/phone/edit.tpl
     ><span class="fas fa-plus"></span></button>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/phone/detail.tpl
 {{#if phoneNumberData}}
     {{#each phoneNumberData}}
@@ -4654,7 +4654,7 @@ res/templates/fields/phone/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/person-name/edit.tpl
 <div class="row">
     <div class="col-sm-3 col-xs-3">
@@ -4670,7 +4670,7 @@ res/templates/fields/person-name/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/person-name/edit-last-first.tpl
 <div class="row">
     <div class="col-sm-3 col-xs-3">
@@ -4686,7 +4686,7 @@ res/templates/fields/person-name/edit-last-first.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/person-name/edit-last-first-middle.tpl
 <div class="row">
     <div class="col-sm-3 col-xs-3">
@@ -4705,7 +4705,7 @@ res/templates/fields/person-name/edit-last-first-middle.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/person-name/edit-first-middle-last.tpl
 <div class="row">
     <div class="col-sm-3 col-xs-3">
@@ -4724,7 +4724,7 @@ res/templates/fields/person-name/edit-first-middle-last.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/person-name/detail.tpl
 {{#if isNotEmpty}}{{formattedValue}}
 {{else}}
@@ -4732,7 +4732,7 @@ res/templates/fields/person-name/detail.tpl
 <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/password/edit.tpl
 {{#unless isNew}}
 <a role="button" tabindex="0" data-action="change">{{translate 'change'}}</a>
@@ -4746,15 +4746,15 @@ res/templates/fields/password/edit.tpl
 	{{#if params.maxLength}} maxlength="{{params.maxLength}}"{{/if}}
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/password/detail.tpl
 **********
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/multi-enum/edit.tpl
 
 <input data-name="{{name}}" type="text" class="{{#if viewObject.params.displayAsList}}as-list{{/if}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/map/detail.tpl
 {{#if hasAddress}}
 <div class="map"></div>
@@ -4762,7 +4762,7 @@ res/templates/fields/map/detail.tpl
 <span class="none-value">{{translate 'None'}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-parent/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='searchRanges'}}
@@ -4797,7 +4797,7 @@ res/templates/fields/link-parent/search.tpl
     <input type="hidden" data-name="{{idName}}" value="{{searchData.idValue}}">
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-parent/list.tpl
 {{#if idValue~}}
 	{{#if iconHtml}}{{{iconHtml}}}{{/if~}}
@@ -4808,7 +4808,7 @@ res/templates/fields/link-parent/list.tpl
         >{{nameValue}}</a>
 {{~/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-parent/list-link.tpl
 <a href="#{{scope}}/view/{{model.id}}" class="link" data-id="{{model.id}}" title="{{value}}">
 {{#if idValue}}
@@ -4817,7 +4817,7 @@ res/templates/fields/link-parent/list-link.tpl
     {{translate 'None'}}
 {{/if}}
 </a>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-parent/edit.tpl
 <div class="input-group input-group-link-parent">
     {{#if foreignScopeList.length}}
@@ -4856,7 +4856,7 @@ res/templates/fields/link-parent/edit.tpl
 </div>
 <input type="hidden" data-name="{{idName}}" value="{{idValue}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-parent/detail.tpl
 {{#if idValue}}{{#if iconHtml}}{{{iconHtml}}}{{/if}}<a href="#{{foreignScope}}/view/{{idValue}}" title="{{translate foreignScope category='scopeNames'}}">{{nameValue}}</a>
 {{else}}
@@ -4867,7 +4867,7 @@ res/templates/fields/link-parent/detail.tpl
     {{else}}<span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-multiple/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='searchRanges'}}
@@ -4899,13 +4899,13 @@ res/templates/fields/link-multiple/search.tpl
     <input type="hidden" data-name="{{name}}Ids" value="{{searchParams.value}}" class="ids">
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-multiple/list.tpl
 {{#if value}}
     {{{value}}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-multiple/edit.tpl
 <div class="link-container list-group"></div>
 
@@ -4936,7 +4936,7 @@ res/templates/fields/link-multiple/edit.tpl
     </span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link-multiple/detail.tpl
 {{#if value}}
     {{{value}}}
@@ -4948,7 +4948,7 @@ res/templates/fields/link-multiple/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='searchRanges'}}
@@ -5005,13 +5005,13 @@ res/templates/fields/link/search.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link/list.tpl
 {{#if url~}}
     {{~#if iconHtml}}{{{iconHtml}}}{{/if}}<a href="{{url}}" title="{{nameValue}}" class="text-default">{{nameValue}}</a>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link/edit.tpl
 <div class="input-group">
     <input
@@ -5047,7 +5047,7 @@ res/templates/fields/link/edit.tpl
 </div>
 <input type="hidden" data-name="{{idName}}" value="{{idValue}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/link/detail.tpl
 {{#if url}}
 {{#if iconHtml}}{{{iconHtml}}}{{/if}}<a href="{{url}}" class="{{#if linkClass}}{{linkClass}}{{/if}}">{{nameValue}}</a>
@@ -5059,7 +5059,7 @@ res/templates/fields/link/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/json-object/detail.tpl
 {{#if isNotEmpty}}
 {{{value}}}
@@ -5067,7 +5067,7 @@ res/templates/fields/json-object/detail.tpl
 {{#if valueIsSet}}<span class="none-value">{{translate 'None'}}</span>{{else}}
 <span class="loading-value"></span>{{/if}}{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/int/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='intSearchRanges'}}
@@ -5095,23 +5095,23 @@ res/templates/fields/int/search.tpl
     spellcheck="false"
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/int/list.tpl
 {{#if isNotEmpty}}<span title="{{value}}" class="numeric-text">{{value}}</span>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/int/edit.tpl
 
 <input type="text" class="main-element form-control numeric-text" data-name="{{name}}" value="{{value}}" autocomplete="espo-{{name}}" pattern="[\-]?[0-9]*" {{#if params.maxLength}} maxlength="{{params.maxLength}}"{{/if}}>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/int/detail.tpl
 {{#if isNotEmpty}}<span class="numeric-text">{{value}}</span>{{else}}
     {{#if valueIsSet}}<span class="none-value">{{translate 'None'}}</span>
     {{else}}<span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/formula/edit.tpl
 <div class="formula-edit-container clearfix">
     <div>
@@ -5148,7 +5148,7 @@ res/templates/fields/formula/edit.tpl
     {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/formula/detail.tpl
 {{#if isNotEmpty}}
 <div class="row">
@@ -5158,16 +5158,16 @@ res/templates/fields/formula/detail.tpl
 </div>
 {{else}}<span class="none-value">{{translate 'None'}}</span>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/float/edit.tpl
 
 <input type="text" class="main-element form-control numeric-text" data-name="{{name}}" value="{{value}}" autocomplete="espo-{{name}}" pattern="[\-]?[0-9,.]*" {{#if params.maxLength}} maxlength="{{params.maxLength}}"{{/if}}>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/file/list.tpl
 {{#if value}}{{{value}}}{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/file/edit.tpl
 <div class="attachment-upload">
     <div class="attachment-button{{#if id}} hidden{{/if}} clearfix ">
@@ -5207,7 +5207,7 @@ res/templates/fields/file/edit.tpl
     <div class="attachment"></div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/file/detail.tpl
 {{#if value}}
     {{{value}}}
@@ -5217,14 +5217,14 @@ res/templates/fields/file/detail.tpl
     {{else}}<span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/enum/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='searchRanges'}}
 </select>
 <div class="input-container"><input class="main-element" type="text"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/enum/list.tpl
 {{#if isNotEmpty}}
 {{#if style}}
@@ -5234,7 +5234,7 @@ res/templates/fields/enum/list.tpl
 >{{/if}}{{valueTranslated}}{{#if style}}</span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/enum/list-link.tpl
 <a href="#{{scope}}/view/{{model.id}}" class="link" data-id="{{model.id}}" title="{{value}}">
     {{#if value}}
@@ -5248,7 +5248,7 @@ res/templates/fields/enum/list-link.tpl
     {{/if}}
 </a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/enum/edit.tpl
 <select
     data-name="{{name}}"
@@ -5264,7 +5264,7 @@ res/templates/fields/enum/edit.tpl
     }}
 </select>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/enum/detail.tpl
 {{#if isNotEmpty}}
 {{#if style}}
@@ -5278,7 +5278,7 @@ res/templates/fields/enum/detail.tpl
 {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/email-address/edit.tpl
 <input
 	type="email"
@@ -5289,7 +5289,7 @@ res/templates/fields/email-address/edit.tpl
 	autocomplete="espo-{{name}}"
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/email/list.tpl
 {{#if isErased}}
     {{value}}
@@ -5309,7 +5309,7 @@ res/templates/fields/email/list.tpl
 {{/unless}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/email/edit.tpl
 <div>
 {{#each emailAddressData}}
@@ -5380,7 +5380,7 @@ res/templates/fields/email/edit.tpl
     ><span class="fas fa-plus"></span></button>
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/email/detail.tpl
 {{#if emailAddressData}}
     {{#each emailAddressData}}
@@ -5419,13 +5419,13 @@ res/templates/fields/email/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/duration/edit.tpl
 <select data-name="{{name}}" class="form-control main-element">
     {{{durationOptions}}}
 </select>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/datetime/edit.tpl
 
 <div class="input-group-container-2">
@@ -5450,7 +5450,7 @@ res/templates/fields/datetime/edit.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/date/search.tpl
 <select class="form-control search-type input-sm">
     {{options searchTypeList searchType field='dateSearchRanges'}}
@@ -5496,7 +5496,7 @@ res/templates/fields/date/search.tpl
     >
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/date/list.tpl
 {{#if dateValue~}}
     <span
@@ -5505,7 +5505,7 @@ res/templates/fields/date/list.tpl
     >{{dateValue}}</span>
 {{~/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/date/list-link.tpl
 <a
     href="#{{scope}}/view/{{model.id}}"
@@ -5514,7 +5514,7 @@ res/templates/fields/date/list-link.tpl
     title="{{value}}"
 >{{dateValue}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/date/edit.tpl
 <div class="input-group">
     <input class="main-element form-control numeric-text" type="text" data-name="{{name}}" value="{{dateValue}}" autocomplete="espo-{{name}}">
@@ -5523,7 +5523,7 @@ res/templates/fields/date/edit.tpl
     </span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/date/detail.tpl
 {{#if dateValue ~}}
     <span
@@ -5540,31 +5540,31 @@ res/templates/fields/date/detail.tpl
 <span class="loading-value"></span>
 {{/if~}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/list.tpl
 {{#if isNotEmpty}}
     <span title="{{value}} {{currencyValue}}"><span class="numeric-text">{{value}}</span> {{currencyValue}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/list-3.tpl
 {{#if isNotEmpty}}
     <span title="{{currencySymbol}}{{value}}"><span class="numeric-text">{{value}}</span> {{currencySymbol}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/list-2.tpl
 {{#if isNotEmpty}}
     <span title="{{currencySymbol}}{{value}}">{{currencySymbol}}<span class="numeric-text">{{value}}</span></span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/list-1.tpl
 {{#if isNotEmpty}}
     <span title="{{value}} {{currencyValue}}"><span class="numeric-text">{{value}}</span> {{currencyValue}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/edit.tpl
 <div class="input-group input-group-currency">
     <span class="input-group-item">
@@ -5590,7 +5590,7 @@ res/templates/fields/currency/edit.tpl
     {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/detail.tpl
 {{#if isNotEmpty}}
     <span class="numeric-text">{{value}}</span> {{currencyValue}}
@@ -5599,7 +5599,7 @@ res/templates/fields/currency/detail.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/detail-no-currency.tpl
 {{#if isNotEmpty}}
     <span class="numeric-text">{{value}}</span>
@@ -5608,7 +5608,7 @@ res/templates/fields/currency/detail-no-currency.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/detail-3.tpl
 {{#if isNotEmpty}}
     <span class="numeric-text">{{value}}</span> {{currencySymbol}}
@@ -5617,7 +5617,7 @@ res/templates/fields/currency/detail-3.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/detail-2.tpl
 {{#if isNotEmpty}}
     {{currencySymbol}}<span class="numeric-text">{{value}}</span>
@@ -5626,7 +5626,7 @@ res/templates/fields/currency/detail-2.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/currency/detail-1.tpl
 {{#if isNotEmpty}}
     <span class="numeric-text">{{value}}</span> {{currencyValue}}
@@ -5635,7 +5635,7 @@ res/templates/fields/currency/detail-1.tpl
     <span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/colorpicker/edit.tpl
 <div class="input-group colorpicker-component">
     <input
@@ -5649,12 +5649,12 @@ res/templates/fields/colorpicker/edit.tpl
     <span class="btn btn-default input-group-addon"><i></i></span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/colorpicker/detail.tpl
 {{#if isNotEmpty}}<span class="fas fa-tint" style="color: {{value}}"></span> <span>{{value}}</span>
 {{else}}<span class="none-value">{{translate 'None'}}</span>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/checklist/edit.tpl
 
 {{#each optionDataList}}
@@ -5671,7 +5671,7 @@ res/templates/fields/checklist/edit.tpl
 {{/each}}
 {{#unless optionDataList.length}}{{translate 'None'}}{{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/checklist/detail.tpl
 
 {{#each optionDataList}}
@@ -5689,7 +5689,7 @@ res/templates/fields/checklist/detail.tpl
 {{/each}}
 {{#unless optionDataList.length}}<span class="none-value">{{translate 'None'}}</span>{{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/bool/search.tpl
 <select data-name="{{name}}" class="main-element form-control input-sm">
 	<option value="isTrue" {{#ifEqual searchType 'isTrue'}} selected{{/ifEqual}}>{{translate 'Yes'}}</option>
@@ -5697,20 +5697,20 @@ res/templates/fields/bool/search.tpl
 	<option value="any" {{#ifEqual searchType 'any'}} selected{{/ifEqual}}>{{translateOption 'any' field='searchRanges'}}</option>
 </select>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/bool/list.tpl
 <input type="checkbox" class="form-checkbox form-checkbox-simple"{{#if value}} checked{{/if}} disabled>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/bool/edit.tpl
 <input type="checkbox"{{#if value}} checked{{/if}} data-name="{{name}}" class="main-element form-checkbox">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/bool/detail.tpl
 {{#if valueIsSet}}<input class="form-checkbox" type="checkbox"{{#if value}} checked{{/if}} disabled>{{else}}
 <span class="loading-value"></span>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/base/search.tpl
 <input
     type="text"
@@ -5725,11 +5725,11 @@ res/templates/fields/base/search.tpl
     {{/if}}
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/base/list.tpl
 {{value}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/base/list-link.tpl
 <a
     href="#{{scope}}/view/{{model.id}}"
@@ -5738,7 +5738,7 @@ res/templates/fields/base/list-link.tpl
     title="{{value}}"
 >{{#if value}}{{value}}{{else}}{{translate 'None'}}{{/if}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/base/edit.tpl
 <input
 	type="text"
@@ -5752,10 +5752,10 @@ res/templates/fields/base/edit.tpl
     {{/if}}
 >
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/base/detail.tpl
 {{value}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/barcode/detail.tpl
 {{#if isNotEmpty}}
 
@@ -5769,12 +5769,12 @@ res/templates/fields/barcode/detail.tpl
 {{#if valueIsSet}}<span class="none-value">{{translate 'None'}}</span>{{else}}<span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/attachments-multiple/list.tpl
 {{#if value}}
     {{{value}}}
 {{/if}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/attachments-multiple/edit.tpl
 <div class="attachment-upload">
     <div class="clearfix attachment-control">
@@ -5815,7 +5815,7 @@ res/templates/fields/attachments-multiple/edit.tpl
     <div class="attachments"></div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/attachments-multiple/detail.tpl
 {{#if value}}
     {{{value}}}
@@ -5827,7 +5827,7 @@ res/templates/fields/attachments-multiple/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/array/search.tpl
 
 <select class="form-control search-type input-sm">
@@ -5837,11 +5837,11 @@ res/templates/fields/array/search.tpl
     <input class="main-element" type="text" autocomplete="espo-off">
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/array/list.tpl
 {{#unless isEmpty}}{{{value}}}{{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/array/list-link.tpl
 <a
     href="#{{scope}}/view/{{model.id}}"
@@ -5850,7 +5850,7 @@ res/templates/fields/array/list-link.tpl
     title="{{value}}"
 >{{#if value}}{{{value}}}{{else}}{{translate 'None'}}{{/if}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/array/edit.tpl
 <div
     class="link-container list-group{{#if keepItems}} no-input{{/if}}"
@@ -5885,18 +5885,18 @@ res/templates/fields/array/edit.tpl
 {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/array/detail.tpl
 {{#unless isEmpty}}{{{value}}}{{else}}
     {{#if valueIsSet}}<span class="none-value">{{translate 'None'}}</span>{{else}}<span class="loading-value"></span>{{/if}}
 {{/unless}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/search.tpl
 
 <input type="text" class="main-element form-control input-sm" data-name="{{name}}" value="{{searchData.value}}" {{#if params.maxLength}} maxlength="{{params.maxLength}}"{{/if}}{{#if params.size}} size="{{params.size}}"{{/if}} autocomplete="espo-{{name}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/list-link.tpl
 {{#if formattedAddress}}
     <a
@@ -5906,7 +5906,7 @@ res/templates/fields/address/list-link.tpl
     >{{breaklines formattedAddress}}</a>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/edit.tpl
 <textarea
     class="form-control auto-height"
@@ -5929,7 +5929,7 @@ res/templates/fields/address/edit.tpl
 </div>
 <input type="text" class="form-control" data-name="{{name}}Country" value="{{countryValue}}" placeholder="{{translate 'Country'}}" autocomplete="espo-country" maxlength="{{countryMaxLength}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/edit-4.tpl
 <textarea
     class="form-control auto-height"
@@ -5952,7 +5952,7 @@ res/templates/fields/address/edit-4.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/edit-3.tpl
 <input type="text" class="form-control auto-height" data-name="{{name}}Country" value="{{countryValue}}" placeholder="{{translate 'Country'}}" autocomplete="espo-country" maxlength="{{countryMaxLength}}">
 <div class="row">
@@ -5975,7 +5975,7 @@ res/templates/fields/address/edit-3.tpl
     style="resize: none;"
 >{{streetValue}}</textarea>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/edit-2.tpl
 <textarea
     class="form-control auto-height"
@@ -6002,7 +6002,7 @@ res/templates/fields/address/edit-2.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/edit-1.tpl
 <textarea
     class="form-control auto-height"
@@ -6025,7 +6025,7 @@ res/templates/fields/address/edit-1.tpl
 </div>
 <input type="text" class="form-control" data-name="{{name}}Country" value="{{countryValue}}" placeholder="{{translate 'Country'}}" autocomplete="espo-country" maxlength="{{countryMaxLength}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/fields/address/detail.tpl
 {{#if formattedAddress}}
 {{breaklines formattedAddress}}
@@ -6048,7 +6048,7 @@ res/templates/fields/address/detail.tpl
 >{{translate 'View on Map'}}</a></div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/external-account/oauth2.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -6088,7 +6088,7 @@ res/templates/external-account/oauth2.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/external-account/index.tpl
 <div class="page-header"><h3>{{translate 'ExternalAccount' category='scopeNamesPlural'}}</h3></div>
 
@@ -6117,7 +6117,7 @@ res/templates/external-account/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/export/modals/idle.tpl
 <div class="record no-side-margin">{{{record}}}</div>
 
@@ -6127,11 +6127,11 @@ res/templates/export/modals/idle.tpl
 	<button type="button" class="btn btn-default download-button" data-action="download">{{translate 'Download'}}</button>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/export/modals/export.tpl
 <div class="record no-side-margin">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/event/fields/name-for-history/list-link.tpl
 <a
     href="#{{model.entityType}}/view/{{model.id}}"
@@ -6141,7 +6141,7 @@ res/templates/event/fields/name-for-history/list-link.tpl
     {{#if strikethrough}}style="text-decoration: line-through;"{{/if}}
 >{{#if value}}{{value}}{{else}}{{translate 'None'}}{{/if}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/errors/404.tpl
 <div class="container">
     <div class="panel panel-default block-center-md margin-top-2x">
@@ -6152,7 +6152,7 @@ res/templates/errors/404.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/errors/403.tpl
 <div class="container">
     <div class="panel panel-default block-center-md margin-top-2x">
@@ -6163,7 +6163,7 @@ res/templates/errors/403.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-template/fields/insert-field/edit.tpl
 <div class="row">
     <div class="col-sm-4 col-xs-6">
@@ -6177,10 +6177,10 @@ res/templates/email-template/fields/insert-field/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-template/fields/insert-field/detail.tpl
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-folder/list-side.tpl
 <ul class="list-group list-group-side list-group-no-border folder-list">
     <li
@@ -6216,7 +6216,7 @@ res/templates/email-folder/list-side.tpl
     {{/each}}
 </ul>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-folder/modals/select-folder.tpl
 <ul class="list-group no-side-margin">
     {{#each folderDataList}}
@@ -6233,7 +6233,7 @@ res/templates/email-folder/modals/select-folder.tpl
     {{/each}}
 </ul>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-account/modals/select-folder.tpl
 {{#unless folders}}
     {{translate 'No Data'}}
@@ -6248,7 +6248,7 @@ res/templates/email-account/modals/select-folder.tpl
 {{/each}}
 </ul>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email-account/fields/folder/edit.tpl
 <div class="input-group">
     <input class="main-element form-control" type="text" data-name="{{name}}" value="{{value}}" autocomplete="espo-{{name}}">
@@ -6257,7 +6257,7 @@ res/templates/email-account/fields/folder/edit.tpl
     </span>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/list.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="search-container">{{{search}}}</div>
@@ -6271,7 +6271,7 @@ res/templates/email/list.tpl
     <div class="list-container{{#unless foldersDisabled}} col-md-10 col-sm-9{{else}} col-md-12{{/unless}}">{{{list}}}</div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/subject/list-link.tpl
 <span>
    <span>
@@ -6305,7 +6305,7 @@ res/templates/email/fields/subject/list-link.tpl
     {{/if}}
 </span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/select-template/edit.tpl
 <div class="input-group">
     <input
@@ -6328,13 +6328,13 @@ res/templates/email/fields/select-template/edit.tpl
 </div>
 <input type="hidden" data-name="{{idName}}" value="{{idValue}}">
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/person-string-data/list.tpl
 <span class="list-icon-container pull-right"{{#unless isReplied}} style="visibility: hidden;"{{/unless}}>
     <span class="fas icon-is-replied fa-sm text-muted icon-flip-horizontal" title="{{translate 'isReplied' category='fields' scope='Email'}}"></span>
 </span>
 <span title="{{value}}">{{value}}</span>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/person-string-data/list-for-expanded.tpl
 <span title="{{value}}">{{value}}</span>
 <span class="list-icon-container"{{#unless isReplied}} style="display: none;"{{/unless}}>
@@ -6344,10 +6344,10 @@ res/templates/email/fields/person-string-data/list-for-expanded.tpl
     ></span>
 </span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/icon/detail.tpl
 <span class="fas fa-envelope action text-muted" data-action="quickView" data-id="{{model.id}}" style="cursor: pointer; margin-left: -7px; top: 2px;" title="{{translate 'View'}}"></span>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/has-attachment/detail.tpl
 {{#if value~}}
 <a
@@ -6361,11 +6361,11 @@ res/templates/email/fields/has-attachment/detail.tpl
 ></span></a>
 {{~/if~}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/from-email-address/detail.tpl
 {{nameValue}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/email-address-varchar/edit.tpl
 <div class="link-container list-group"></div>
 {{#if hasSelectAddress}}
@@ -6398,7 +6398,7 @@ res/templates/email/fields/email-address-varchar/edit.tpl
     >
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/email-address-varchar/detail.tpl
 {{#if value}}
     {{{value}}}
@@ -6407,11 +6407,11 @@ res/templates/email/fields/email-address-varchar/detail.tpl
     {{else}}<span class="loading-value"></span>{{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/create-event/detail.tpl
 <button class="btn btn-default" data-action="createEvent">{{translate 'Create Meeting' scope='Meeting'}}</button>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/email/fields/compose-from-address/edit.tpl
 {{#if list.length}}
     <select data-name="{{name}}" class="form-control main-element">
@@ -6423,10 +6423,10 @@ res/templates/email/fields/compose-from-address/edit.tpl
     {{{noSmtpMessage}}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/dashlets/record-list/options.tpl
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/dashlets/options/base.tpl
 <div class="no-side-margin">
 
@@ -6436,12 +6436,12 @@ res/templates/dashlets/options/base.tpl
 
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/attachment/fields/name/detail.tpl
 
 <span class="fas fa-paperclip small"></span> <a href="{{url}}" target="_blank">{{value}}</a>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/index.tpl
 <div class="page-header"><h3>{{translate 'Administration' scope='Admin'}}</h3></div>
 
@@ -6501,14 +6501,14 @@ res/templates/admin/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/upgrade/ready.tpl
 
 <p class="text-danger">
     {{complexText text inline=true}}
 </p>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/upgrade/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -6551,14 +6551,14 @@ res/templates/admin/upgrade/index.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/upgrade/done.tpl
 
 <p class="text-success">
     {{complexText text inline=true}}
 </p>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/template-manager/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -6584,7 +6584,7 @@ res/templates/admin/template-manager/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/template-manager/edit.tpl
 <div class="page-header">
     <h4>{{{title}}}</h4>
@@ -6616,7 +6616,7 @@ res/templates/admin/template-manager/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/system-requirements/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -6731,13 +6731,13 @@ res/templates/admin/system-requirements/index.tpl
     </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/settings/headers/page.tpl
 <h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
 {{translate viewObject.options.label category='labels' scope='Admin'}}</h3>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/panels/notifications.tpl
 {{#if notificationList}}
     <div class="panel panel-danger">
@@ -6755,7 +6755,7 @@ res/templates/admin/panels/notifications.tpl
     </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/link-manager/index.tpl
 <div class="page-header">
     <h3>
@@ -6882,7 +6882,7 @@ res/templates/admin/link-manager/index.tpl
 
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/link-manager/modals/edit.tpl
 <div class="panel panel-default no-side-margin">
     <div class="panel-body">
@@ -7032,7 +7032,7 @@ res/templates/admin/link-manager/modals/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/layouts/rows.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7118,7 +7118,7 @@ res/templates/admin/layouts/rows.tpl
 </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/layouts/index.tpl
 <div class="page-header"><h3>{{{headerHtml}}}</h3></div>
 
@@ -7162,7 +7162,7 @@ res/templates/admin/layouts/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/layouts/grid.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7247,7 +7247,7 @@ res/templates/admin/layouts/grid.tpl
     </li>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/layouts/grid-panel.tpl
 <header data-name="{{name}}">
     <a
@@ -7334,7 +7334,7 @@ res/templates/admin/layouts/grid-panel.tpl
     ><i class="fas fa-plus"></i></a>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/layouts/record/edit-attributes.tpl
 {{#each attributeDataList}}
 <div class="row">
@@ -7354,7 +7354,7 @@ res/templates/admin/layouts/record/edit-attributes.tpl
 </div>
 {{/each}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/label-manager/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -7402,7 +7402,7 @@ res/templates/admin/label-manager/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/label-manager/edit.tpl
 <div class="page-header">
     <h4>{{translate scope category='scopeNames'}}</h4>
@@ -7466,7 +7466,7 @@ res/templates/admin/label-manager/edit.tpl
 {{/each}}
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/label-manager/category.tpl
 {{#each categoryDataList}}
 <div class="row" data-name="{{name}}">
@@ -7481,7 +7481,7 @@ res/templates/admin/label-manager/category.tpl
 </div>
 {{/each}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/integrations/oauth2.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7531,7 +7531,7 @@ res/templates/admin/integrations/oauth2.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/integrations/index.tpl
 <div class="page-header">
     <h3>
@@ -7564,7 +7564,7 @@ res/templates/admin/integrations/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/integrations/edit.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7611,7 +7611,7 @@ res/templates/admin/integrations/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/formula-sandbox/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -7620,7 +7620,7 @@ res/templates/admin/formula-sandbox/index.tpl
 
 <div class="record">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/formula/modals/add-function.tpl
 <div class="complex-text margin-bottom-2x">{{{text}}}</div>
 
@@ -7634,7 +7634,7 @@ res/templates/admin/formula/modals/add-function.tpl
         </li>
     {{/each}}
 </ul>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/list.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7722,7 +7722,7 @@ res/templates/admin/field-manager/list.tpl
 
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/index.tpl
 <div class="page-header">
     {{{header}}}
@@ -7736,7 +7736,7 @@ res/templates/admin/field-manager/index.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/header.tpl
 <h3>
     <a href="#Admin">{{translate 'Administration'}}</a>
@@ -7756,7 +7756,7 @@ res/templates/admin/field-manager/header.tpl
     {{/if}}
 </h3>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/edit.tpl
 <div class="button-container">
     <div class="btn-group">
@@ -7844,7 +7844,7 @@ res/templates/admin/field-manager/edit.tpl
     {{/if}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/modals/add-field.tpl
 <div class="margin-bottom-2x margin-top">
     <input
@@ -7872,7 +7872,7 @@ res/templates/admin/field-manager/modals/add-field.tpl
 
 <div class="no-data hidden">{{translate 'No Data'}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/fields/dynamic-logic-options/edit.tpl
 
 <div class="dynamic-logic-options">
@@ -7925,7 +7925,7 @@ res/templates/admin/field-manager/fields/dynamic-logic-options/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/fields/dynamic-logic-conditions/edit.tpl
 <div>
     <div class="pull-right">
@@ -7936,7 +7936,7 @@ res/templates/admin/field-manager/fields/dynamic-logic-conditions/edit.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/field-manager/fields/dynamic-logic-conditions/detail.tpl
 {{#if isNotEmpty}}
     <div>
@@ -7952,7 +7952,7 @@ res/templates/admin/field-manager/fields/dynamic-logic-conditions/detail.tpl
     {{/if}}
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/extensions/ready.tpl
 
 <p class="text-danger">
@@ -7960,7 +7960,7 @@ res/templates/admin/extensions/ready.tpl
 </p>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/extensions/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -7990,7 +7990,7 @@ res/templates/admin/extensions/index.tpl
 <div class="list-container">{{{list}}}</div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/extensions/done.tpl
 
 <p class="text-success">
@@ -7998,7 +7998,7 @@ res/templates/admin/extensions/done.tpl
 </p>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/scope.tpl
 <div class="page-header">
     <h3><a href="#Admin">{{translate 'Administration'}}</a>
@@ -8094,7 +8094,7 @@ res/templates/admin/entity-manager/scope.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/index.tpl
 <div class="page-header"><h3><a href="#Admin">{{translate 'Administration'}}</a>
 <span class="breadcrumb-separator"><span></span></span>
@@ -8174,7 +8174,7 @@ res/templates/admin/entity-manager/index.tpl
 </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/formula.tpl
 <div class="page-header">
     <h3>
@@ -8214,7 +8214,7 @@ res/templates/admin/entity-manager/formula.tpl
 
 <div class="record">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/edit.tpl
 <div class="page-header">
     <h3><a href="#Admin">{{translate 'Administration'}}</a>
@@ -8233,7 +8233,7 @@ res/templates/admin/entity-manager/edit.tpl
 
 <div class="record">{{{record}}}</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/record/edit-formula.tpl
 <div class="row">
     <div data-name="{{field}}" class="cell col-sm-12">
@@ -8246,7 +8246,7 @@ res/templates/admin/entity-manager/record/edit-formula.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/modals/select-icon.tpl
 <div class="margin-top margin-bottom-2x">
 	<a role="button" tabindex="0" data-action="select" class="action btn btn-default" data-value="" style="cursor: pointer;">
@@ -8279,7 +8279,7 @@ res/templates/admin/entity-manager/modals/select-icon.tpl
 {{/each}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/entity-manager/fields/icon-class/edit.tpl
 <div>
     <button
@@ -8295,7 +8295,7 @@ res/templates/admin/entity-manager/fields/icon-class/edit.tpl
         {{/if}}
     </span>
 </div>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/modals/edit.tpl
 <div class="panel panel-default no-side-margin"><div class="panel-body">
 
@@ -8303,28 +8303,28 @@ res/templates/admin/dynamic-logic/modals/edit.tpl
 
 </div></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/item-operator-only-date.tpl
 {{translate field category='fields' scope=scope}} {{{operatorString}}} {{translateOption dateValue field='dateSearchRanges'}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/item-operator-only-base.tpl
 {{translate field category='fields' scope=scope}} {{{operatorString}}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/item-multiple-values-base.tpl
 {{translate field category='fields' scope=scope}} {{{operatorString}}}
 ({{#each valueViewDataList}}<span data-name="{{key}}">{{{var key ../this}}}</span>{{#unless isEnd}}, {{/unless}}{{/each}})
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/item-base.tpl
 {{leftString}} {{{operatorString}}} <span data-name="{{valueViewKey}}">{{{value}}}</span>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/group-not.tpl
 
     <div>{{translate 'not' category='logicalOperators' scope='Admin'}} (
         <div data-view-key="{{viewKey}}" style="margin-left: 15px;">{{{var viewKey this}}}</div>
     )</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions-string/group-base.tpl
 {{#if isEmpty}}
     {{translate 'None'}}
@@ -8340,7 +8340,7 @@ res/templates/admin/dynamic-logic/conditions-string/group-base.tpl
     {{/each}}
     )</div>
 {{/if}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions/not.tpl
 
 <div class="group-head" data-level="{{level}}">
@@ -8394,7 +8394,7 @@ res/templates/admin/dynamic-logic/conditions/not.tpl
 
 <div>)</div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions/group-base.tpl
 
 <div class="group-head" data-level="{{level}}">
@@ -8464,7 +8464,7 @@ res/templates/admin/dynamic-logic/conditions/group-base.tpl
 <div>)</div>
 {{/ifNotEqual}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 res/templates/admin/dynamic-logic/conditions/field-types/base.tpl
 <div class="row dynamic-logic-edit-item-row">
     <div class="col-sm-2">{{leftString}}</div>
@@ -8478,12 +8478,12 @@ res/templates/admin/dynamic-logic/conditions/field-types/base.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/target-list/record/panels/opted-out.tpl
 <div class="list-container">
     {{{list}}}
 </div>
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/meeting/popup-notification.tpl
 {{#if closeButton}}
 <a role="button" tabindex="0" class="pull-right close" data-action="close" aria-hidden="true"><span class="fas fa-times"></span></a>
@@ -8508,7 +8508,7 @@ modules/crm/res/templates/meeting/popup-notification.tpl
 </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/meeting/fields/reminders/edit.tpl
 <div class="reminders-container"></div>
 <button
@@ -8517,7 +8517,7 @@ modules/crm/res/templates/meeting/fields/reminders/edit.tpl
     type="button"
 ><span class="fas fa-plus"></span></button>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/meeting/fields/reminders/detail.tpl
 {{#if value}}
     {{{value}}}
@@ -8525,7 +8525,7 @@ modules/crm/res/templates/meeting/fields/reminders/detail.tpl
     <span class="none-value">{{translate 'None'}}</span>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/lead/convert.tpl
 <div class="header page-header">{{{header}}}</div>
 
@@ -8552,7 +8552,7 @@ modules/crm/res/templates/lead/convert.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/knowledge-base-article/list.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="search-container">{{{search}}}</div>
@@ -8565,7 +8565,7 @@ modules/crm/res/templates/knowledge-base-article/list.tpl
 </div>
 
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/knowledge-base-article/modals/select-records.tpl
 <div class="search-container">{{{search}}}</div>
 
@@ -8582,7 +8582,7 @@ modules/crm/res/templates/knowledge-base-article/modals/select-records.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/event-confirmation/confirmation.tpl
 <div class="container content">
     <div class="block-center-md">
@@ -8621,7 +8621,7 @@ modules/crm/res/templates/event-confirmation/confirmation.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/document/list.tpl
 <div class="page-header">{{{header}}}</div>
 <div class="search-container">{{{search}}}</div>
@@ -8633,7 +8633,7 @@ modules/crm/res/templates/document/list.tpl
     <div class="list-container{{#unless categoriesDisabled}} col-md-9 col-sm-8{{else}} col-md-12{{/unless}}">{{{list}}}</div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/document/modals/select-records.tpl
 <div class="search-container">{{{search}}}</div>
 
@@ -8650,14 +8650,14 @@ modules/crm/res/templates/document/modals/select-records.tpl
 </div>
 {{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/contact/fields/account-role/detail.tpl
 {{#if accountIsInactive}}<del>{{/if}}<span title="{{value}}">{{value}}</span>{{#if accountIsInactive}}</del>{{/if}}
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/campaign-log-record/fields/data/detail.tpl
 {{{value}}}
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/campaign/unsubscribe.tpl
 <div class="container content">
     <div class="block-center-md">
@@ -8681,7 +8681,7 @@ modules/crm/res/templates/campaign/unsubscribe.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/campaign/modals/mail-merge-pdf.tpl
 <div class="row">
     <div class="cell col-md-6">
@@ -8695,7 +8695,7 @@ modules/crm/res/templates/campaign/modals/mail-merge-pdf.tpl
     </div>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/calendar/timeline.tpl
 <link href="{{basePath}}client/modules/crm/css/vis.css" rel="stylesheet">
 
@@ -8753,7 +8753,7 @@ modules/crm/res/templates/calendar/timeline.tpl
 
 <div class="timeline"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/calendar/mode-buttons.tpl
 {{#each visibleModeDataList}}
 <button class="btn btn-text strong{{#ifEqual mode ../mode}} active{{/ifEqual}}" data-action="mode" data-mode="{{mode}}" title="{{label}}"><span class="hidden-md hidden-sm hidden-xs">{{label}}</span><span class="visible-md visible-sm visible-xs">{{labelShort}}</span></button>
@@ -8809,7 +8809,7 @@ modules/crm/res/templates/calendar/mode-buttons.tpl
     </ul>
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/calendar/calendar.tpl
 {{#if header}}
 <div class="row button-container">
@@ -8844,13 +8844,13 @@ modules/crm/res/templates/calendar/calendar.tpl
 
 <div class="calendar"></div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/calendar/calendar-page.tpl
 <div class="calendar-container no-window-scroll">
     {{{calendar}}}
 </div>
 
-_delimiter_vt9ta3cfbdd
+_delimiter_qsjrrjte0vb
 modules/crm/res/templates/calendar/modals/edit.tpl
 {{#if isNew}}
 <div class="scope-switcher radio-container">

@@ -1,4 +1,4 @@
-/*! espocrm 2026-02-05 */
+/*! espocrm 2026-02-19 */
 define("modules/crm/views/scheduler/scheduler",["exports","view","vis-data","vis-timeline","moment","jquery"],function(t,e,a,s,n,r){Object.defineProperty(t,"__esModule",{value:!0});t.default=void 0;e=i(e);n=i(n);r=i(r);function i(t){return t&&t.__esModule?t:{default:t}}class o extends e.default{templateContent=`
         <div class="timeline"></div>
         <link href="{{basePath}}client/modules/crm/css/vis.css" rel="stylesheet">

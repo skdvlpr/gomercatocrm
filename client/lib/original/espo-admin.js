@@ -2546,6 +2546,22 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
 
     /**
      * @private
+     * @type {({
+     *     list: {
+     *         level: string|false,
+     *         name: string,
+     *         action: string,
+     *         levelList: string[]|null,
+     *     }[],
+     *     name: string,
+     *     type: 'boolean'|'record',
+     *     access: 'not-set'|'enabled'|'disabled',
+     * }|false)[]}
+     */
+    tableDataList;
+
+    /**
+     * @private
      * @type {
      *     {
      *         name: string,
@@ -2555,6 +2571,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
      *                 action: 'read'|'edit',
      *                 value: 'yes'|'no',
      *                 name: string,
+     *                 levelList: string[]|null,
      *            }[],
      *          }[],
      *     }[]
@@ -2569,7 +2586,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
       data.accessList = this.accessList;
       data.fieldActionList = this.fieldActionList;
       data.fieldLevelList = this.fieldLevelList;
-      data.tableDataList = this.getTableDataList();
+      data.tableDataList = this.tableDataList;
       data.fieldTableDataList = this.fieldTableDataList;
       let hasFieldLevelData = false;
       this.fieldTableDataList.forEach(d => {
@@ -2754,7 +2771,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
       this.formRecordHelper = new _viewRecordHelper.default();
       this.enumViews = {};
       const promises = [];
-      this.getTableDataList().forEach(scopeItem => {
+      this.tableDataList.forEach(scopeItem => {
         if (!scopeItem) {
           return;
         }
@@ -2872,14 +2889,14 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
         promises.push(this.assignView(name, view, `div[data-name="${name}"]`));
         if (actionItem.action === 'read') {
           this.listenTo(this.formModel, `change:${scope}-${field}-read`, (m, value) => {
-            this.controlFieldEditSelect(scope, field, value, true);
+            this.controlFieldEditSelect(scope, field, value);
           });
         }
       });
       if (fieldItem.list.length) {
         const readLevel = this.formModel.attributes[`${scope}-${field}-read`];
         if (readLevel) {
-          this.controlFieldEditSelect(scope, field, readLevel);
+          this.controlFieldEditSelect(scope, field, readLevel, true);
         }
       }
       await Promise.all(promises);
@@ -2901,6 +2918,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
         this.acl.fieldData = Espo.Utils.cloneDeep(this.model.attributes.fieldData || {});
       }
       this.setupScopeList();
+      this.tableDataList = this.getTableDataList();
       this.setupFieldTableDataList();
     }
 
@@ -2988,7 +3006,8 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
             list.push({
               name: `${scope}-${field}-${action}`,
               action: action,
-              value: scopeData[field][action] || 'yes'
+              value: scopeData[field][action] || 'yes',
+              levelList: [...this.fieldLevelList]
             });
           });
           if (this.mode === 'detail' && !list.length) {
@@ -3100,7 +3119,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
         value = limitValue;
       }
       const options = this.fieldLevelList.filter(item => this.levelList.indexOf(item) >= this.levelList.indexOf(limitValue));
-      if (!dontChange) {
+      if (!dontChange && this.hasFieldAction(scope, field, 'edit')) {
         this.formModel.set(attribute, value);
       }
       this.formRecordHelper.setFieldOptionList(attribute, options);
@@ -3124,7 +3143,7 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
         value = limitValue;
       }
       const options = this.getLevelList(scope, action).filter(item => this.levelList.indexOf(item) >= this.levelList.indexOf(limitValue));
-      if (!dontChange) {
+      if (!dontChange && this.hasAction(scope, action)) {
         setTimeout(() => this.formModel.set(attribute, value), 0);
       }
       this.formRecordHelper.setFieldOptionList(attribute, options);
@@ -3132,6 +3151,32 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
       if (view) {
         view.setOptionList(options);
       }
+    }
+
+    /**
+     * @private
+     * @param {string} scope
+     * @param {string} action
+     * @return {boolean}
+     */
+    hasAction(scope, action) {
+      var _this$tableDataList;
+      if (this.tableDataList === false) {
+        return false;
+      }
+      return !!((_this$tableDataList = this.tableDataList) !== null && _this$tableDataList !== void 0 && (_this$tableDataList = _this$tableDataList.find(it => it.name === scope)) !== null && _this$tableDataList !== void 0 && (_this$tableDataList = _this$tableDataList.list.find(it => it.action === action)) !== null && _this$tableDataList !== void 0 && (_this$tableDataList = _this$tableDataList.levelList) !== null && _this$tableDataList !== void 0 && _this$tableDataList.length);
+    }
+
+    /**
+     * @private
+     * @param {string} scope
+     * @param {string} field
+     * @param {string} action
+     * @return {boolean}
+     */
+    hasFieldAction(scope, field, action) {
+      var _this$fieldTableDataL;
+      return !!((_this$fieldTableDataL = this.fieldTableDataList) !== null && _this$fieldTableDataL !== void 0 && (_this$fieldTableDataL = _this$fieldTableDataL.find(it => it.name === scope)) !== null && _this$fieldTableDataL !== void 0 && (_this$fieldTableDataL = _this$fieldTableDataL.list) !== null && _this$fieldTableDataL !== void 0 && (_this$fieldTableDataL = _this$fieldTableDataL.find(it => it.name === field)) !== null && _this$fieldTableDataL !== void 0 && (_this$fieldTableDataL = _this$fieldTableDataL.list.find(it => it.action === action)) !== null && _this$fieldTableDataL !== void 0 && (_this$fieldTableDataL = _this$fieldTableDataL.levelList) !== null && _this$fieldTableDataL !== void 0 && _this$fieldTableDataL.length);
     }
 
     /**
@@ -3159,11 +3204,13 @@ define("views/role/record/table", ["exports", "view", "model", "views/fields/enu
               list: [{
                 name: `${scope}-${field}-read`,
                 action: 'read',
-                value: 'no'
+                value: 'no',
+                levelList: [...this.fieldLevelList]
               }, {
                 name: `${scope}-${field}-edit`,
                 action: 'edit',
-                value: 'no'
+                value: 'no',
+                levelList: [...this.fieldLevelList]
               }]
             };
             scopeData.list.unshift(item);
@@ -3499,7 +3546,9 @@ define("views/role/record/edit", ["exports", "views/record/edit"], function (_ex
       }, view => {
         this.listenTo(view, 'change', () => {
           const data = this.fetch();
-          this.model.set(data);
+          this.model.setMultiple(data, {
+            ui: true
+          });
         });
       });
     }
@@ -15773,6 +15822,12 @@ define("views/admin/layouts/filters", ["exports", "views/admin/layouts/rows"], f
     }
     isFieldEnabled(model, name) {
       if (this.ignoreList.indexOf(name) !== -1) {
+        return false;
+      }
+
+      /** @type {string[]|null} */
+      const layoutList = model.getFieldParam(name, 'layoutAvailabilityList');
+      if (layoutList && !layoutList.includes(this.type)) {
         return false;
       }
       return !model.getFieldParam(name, 'disabled') && !model.getFieldParam(name, 'utility') && !model.getFieldParam(name, 'layoutFiltersDisabled');
