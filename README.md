@@ -1,6 +1,5 @@
-![GoMercato Logo](https://www.gomercato.it/_next/image?url=%2Fimg%2Flogo-long-gray.png&w=384&q=75)
-
 # GoMercato CRM
+![GoMercato Logo](https://www.gomercato.it/_next/image?url=%2Fimg%2Flogo-long-gray.png&w=384&q=75)
 
 EspoCRM customized for GoMercato.
 
