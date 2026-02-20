@@ -235,7 +235,9 @@
             // Safety styling
             p.style.opacity = '1'; 
             p.style.pointerEvents = 'auto';
-            p.style.transform = 'translateY(0)';
+            if (!p.style.transform || p.style.transform === 'translateY(20px)') {
+                p.style.transform = 'translateY(0)';
+            }
         } else {
             console.error('WA: Panel root not found!');
         }
@@ -890,6 +892,7 @@
         var isDragging = false;
         var currentX, currentY, initialX, initialY;
         var xOffset = 0, yOffset = 0;
+        var panelWidth, panelHeight, originalLeft, originalTop;
 
         // Restore position
         var savedPos = localStorage.getItem('wa-panel-position');
@@ -925,13 +928,7 @@
 
         function dragStart(e) {
             if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-            
-            // Calc initial offset
-            // We are using right/bottom css likely.
-            var rect = panel.getBoundingClientRect();
-            
-            // To make it draggable easily, we should switch to Left/Top based positioning?
-            // Or just modify Right/Bottom.
+            e.preventDefault(); // Prevents browser text selection issues
             
             // Let's try transform translate
             if (!xOffset) xOffset = 0;
@@ -939,6 +936,14 @@
             
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;
+
+            // Capture dimensions for snapping
+            var rect = panel.getBoundingClientRect();
+            panelWidth = rect.width;
+            panelHeight = rect.height;
+            // original position (where transform(0,0) puts it)
+            originalLeft = rect.left - xOffset;
+            originalTop = rect.top - yOffset;
 
             isDragging = true;
             panel.classList.add('wa-dragging'); // Disable transitions
@@ -949,8 +954,43 @@
             if (!isDragging) return;
             e.preventDefault();
             
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
+            var rawX = e.clientX - initialX;
+            var rawY = e.clientY - initialY;
+            
+            // Snapping Logic
+            var SNAP_THRESHOLD = 20;
+            var viewportWidth = window.innerWidth;
+            var viewportHeight = window.innerHeight;
+            
+            // Calculate proposed absolute position
+            var proposedLeft = originalLeft + rawX;
+            var proposedTop = originalTop + rawY;
+            var proposedRight = proposedLeft + panelWidth;
+            var proposedBottom = proposedTop + panelHeight;
+            
+            var finalX = rawX;
+            var finalY = rawY;
+            
+            // Snap Left
+            if (Math.abs(proposedLeft) < SNAP_THRESHOLD) {
+                finalX = -originalLeft;
+            } 
+            // Snap Right
+            else if (Math.abs(viewportWidth - proposedRight) < SNAP_THRESHOLD) {
+                finalX = viewportWidth - panelWidth - originalLeft;
+            }
+            
+            // Snap Top
+            if (Math.abs(proposedTop) < SNAP_THRESHOLD) {
+                finalY = -originalTop;
+            }
+            // Snap Bottom
+            else if (Math.abs(viewportHeight - proposedBottom) < SNAP_THRESHOLD) {
+                finalY = viewportHeight - panelHeight - originalTop;
+            }
+
+            currentX = finalX;
+            currentY = finalY;
 
             xOffset = currentX;
             yOffset = currentY;
