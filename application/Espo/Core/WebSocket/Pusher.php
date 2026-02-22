@@ -99,11 +99,14 @@ class Pusher implements WampServerInterface
     {
         $topicId = $topic->getId();
 
+        file_put_contents('data/logs/wamp-debug.log', date('Y-m-d H:i:s') . " onSubscribe called for topic {$topicId}.\n", FILE_APPEND);
+
         if (!$topicId) {
             return;
         }
 
         if (!$this->isTopicAllowed($topicId)) {
+            file_put_contents('data/logs/wamp-debug.log', date('Y-m-d H:i:s') . " Topic {$topicId} not allowed!\n", FILE_APPEND);
             return;
         }
 
@@ -402,13 +405,15 @@ class Pusher implements WampServerInterface
         $process = new Process($command);
         $process->start();
 
-        $process->on('exit', function ($exitCode) use ($conn, $userId) {
+        $process->on('exit', function ($exitCode) use ($process, $conn, $userId, $command) {
             if ($exitCode !== 0) {
+                file_put_contents('data/logs/wamp-debug.log', date('Y-m-d H:i:s') . " AuthTokenCheck failed for {$userId}. Command: {$command}. ExitCode: {$exitCode}. Output: " . $process->getOutput() . "\n", FILE_APPEND);
                 $this->closeConnection($conn);
 
                 return;
             }
 
+            file_put_contents('data/logs/wamp-debug.log', date('Y-m-d H:i:s') . " AuthTokenCheck SUCCESS for {$userId}.\n", FILE_APPEND);
             $this->subscribeUser($conn, $userId);
 
             $this->sendWelcome($conn);
@@ -435,6 +440,7 @@ class Pusher implements WampServerInterface
     public function onClose(ConnectionInterface $conn)
     {
         $connectionId = $conn->resourceId ?? '';
+        file_put_contents('data/logs/wamp-debug.log', date('Y-m-d H:i:s') . " onClose called for connection {$connectionId}.\n", FILE_APPEND);
 
         if ($this->isDebugMode) {
             $this->log("$connectionId: close");
