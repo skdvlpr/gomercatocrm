@@ -1,5 +1,5 @@
 /**
- * WhatsApp Widget — All-in-one script
+ * WhatsApp Widget — All-in-one script with WebSocket real-time support
  * Floating button + slide-out panel with Login/QR, Chat List, Chat View, Contacts
  */
 (function () {
@@ -20,12 +20,16 @@
         statusInterval: null,
         chatInterval: null,
         qrLibLoaded: false,
-        lastQrString: null
+        lastQrString: null,
+        subscribed: false,
+        wsTopicUri: null,
+        wsRetryCount: 0
     };
 
     var config = {
         enabled: true,
-        pollInterval: 3000
+        pollInterval: 3000,
+        statusCheckInterval: 5000
     };
 
     /* ── CSS Injection ──────────────────────────────────────────── */
@@ -86,13 +90,11 @@
             var id = (contact.id && contact.id._serialized) || contact.id;
             if (!id || typeof id !== 'string') return;
             
-            // Skip technical IDs and alternative @lid endpoints
             if (id.indexOf('@lid') !== -1 || id === 'status@broadcast') return;
 
             var phone = extractPhoneNumber(id);
             var isGroup = id.indexOf('@g.us') !== -1;
             
-            // Groups are unique enough by ID, keep them
             if (isGroup) {
                 if (!seen[id]) {
                     seen[id] = contact;
@@ -101,22 +103,19 @@
                 return;
             }
 
-            // Normal contacts: index by their explicit phone number to merge duplicates like +39123 vs 39123@c.us
             if (!seen[phone]) {
                 seen[phone] = contact;
                 unique.push(contact);
             } else {
-                // We already have an entry for this phone. Does the *new* contact have a better name?
                 var existing = seen[phone];
                 var existingHasName = !!(existing.name || existing.pushname);
                 var newHasName = !!(contact.name || contact.pushname);
                 
                 if (!existingHasName && newHasName) {
-                    // Swap the object in the unique array
                     var idx = unique.indexOf(existing);
                     if (idx !== -1) {
                         unique[idx] = contact;
-                        seen[phone] = contact; // update reference
+                        seen[phone] = contact;
                     }
                 }
             }
@@ -211,21 +210,19 @@
 
     function loadAvatar(id) {
         if (!state.avatarCache) state.avatarCache = {};
-        if (state.avatarCache[id] !== undefined) return; // Already fetching or fetched
+        if (state.avatarCache[id] !== undefined) return;
         
-        state.avatarCache[id] = null; // Mark as fetching/empty
+        state.avatarCache[id] = null;
         
         api('GET', 'WhatsApp/action/getProfilePic', { id: id }).then(function(r) {
             if (r && r.url) {
                 state.avatarCache[id] = r.url;
                 
-                // Use DOM safe query to update all instances of this avatar across the UI
                 var els = document.querySelectorAll('[data-wa-avatar-id="' + CSS.escape(id) + '"]');
                 for (var i = 0; i < els.length; i++) {
                     var el = els[i];
                     var initDiv = el.querySelector('.wa-avatar-initials');
                     if (initDiv) {
-                        // Remove any old broken image
                         var oldImg = el.querySelector('img');
                         if (oldImg) oldImg.remove();
                         
@@ -234,7 +231,7 @@
                         img.style.height = '100%';
                         img.style.objectFit = 'cover';
                         img.style.borderRadius = '50%';
-                        img.style.display = 'none'; // hide until loaded
+                        img.style.display = 'none';
                         
                         img.onload = function() {
                             this.style.display = 'block';
@@ -260,16 +257,12 @@
 
     function normalizeTimestamp(ts) {
         if (!ts) return Date.now();
-        // If it's a string looking like a date (contains - or :)
         if (typeof ts === 'string' && (ts.indexOf('-') !== -1 || ts.indexOf(':') !== -1)) {
             var d = new Date(ts.replace(' ', 'T'));
             return isNaN(d.getTime()) ? Date.now() : d.getTime();
         }
-        // Assume seconds if it's a number or numeric string
         var num = parseFloat(ts);
         if (isNaN(num)) return Date.now();
-        // If it seems like seconds (small number) vs millis (big number)
-        // Heuristic: unix timestamp in seconds is ~1.7e9, millis is ~1.7e12
         if (num < 100000000000) return num * 1000;
         return num;
     }
@@ -284,7 +277,6 @@
         var p = _$('wa-panel-root');
         if (p) {
             p.classList.add('open');
-            // Safety styling
             p.style.opacity = '1'; 
             p.style.pointerEvents = 'auto';
             if (!p.style.transform || p.style.transform === 'translateY(20px)') {
@@ -303,7 +295,7 @@
         var p = _$('wa-panel-root');
         if (p) {
             p.classList.remove('open');
-            p.style.opacity = ''; // Reset
+            p.style.opacity = '';
             p.style.pointerEvents = '';
         }
         stopPolling();
@@ -313,14 +305,12 @@
         state.lastScreen = state.screen;
         state.screen = name;
 
-        // Hide all screens
         var screens = document.querySelectorAll('#wa-panel .wa-screen');
         for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
         
         var active = _$('wa-screen-' + name);
         if (active) active.classList.add('active');
 
-        // Header Elements Management
         var backBtn = _$('wa-back-btn');
         var newChatBtn = _$('wa-btn-new-chat');
         var refreshQrBtn = _$('wa-btn-refresh-qr');
@@ -330,16 +320,13 @@
         }
         
         if (newChatBtn) {
-            // Only show New Chat button on Chat List screen
             newChatBtn.style.display = (name === 'chatList') ? 'flex' : 'none';
         }
 
         if (refreshQrBtn) {
-            // Only show Refresh QR button on Login screen
             refreshQrBtn.style.display = (name === 'login') ? 'flex' : 'none';
         }
 
-        // Title update
         var title = _$('wa-panel-title');
         if (title) {
              _$('wa-panel-title').textContent = (name === 'chat' ? (state.chatName || 'Chat') : (name === 'contacts' ? 'Select Contact' : 'WhatsApp'));
@@ -363,13 +350,11 @@
 
             updateStatusUI();
 
-            // Robust connection check
             var isConnected = r.isConnected || 
                               state.status === 'CONNECTED' || 
                               state.status === 'AUTHENTICATED';
 
             if (isConnected) {
-                // FORCE switch if we are on the login screen or if the visual state is wrong
                 var loginScreen = _$('wa-screen-login');
                 if (state.screen === 'login' || (loginScreen && loginScreen.classList.contains('active'))) {
                     showScreen('chatList');
@@ -379,12 +364,10 @@
                      loadChats();
                 }
                 
-                // Start Real-Time subscription
                 if (!state.subscribed) {
                      subscribeToRealTime();
                 }
             } else {
-                // If disconnected and NOT on login, switch to login
                 if (state.screen !== 'login') {
                      showScreen('login');
                 }
@@ -419,45 +402,60 @@
         stopPolling();
         state.statusInterval = setInterval(function () {
             if (state.isOpen) checkStatus();
-        }, 5000);
+        }, config.statusCheckInterval);
     }
 
     function stopPolling() {
         if (state.statusInterval) { clearInterval(state.statusInterval); state.statusInterval = null; }
-        // Chat interval is replaced by WebSocket, but we keep this for legacy safety
         if (state.chatInterval) { clearInterval(state.chatInterval); state.chatInterval = null; }
     }
 
+    /* ── WebSocket Real-Time Subscription ───────────────────────── */
     function subscribeToRealTime() {
         if (state.subscribed) return;
 
-        // EspoCRM uses AutobahnJS/WAMP WebSocket via App.webSocketManager
+        // Use EspoCRM WebSocket (WAMP protocol)
         if (typeof App !== 'undefined' && App.webSocketManager && App.webSocketManager.isEnabled()) {
             try {
-                App.webSocketManager.subscribe('WhatsApp', function(topicUri, event) {
-                    // WAMP sends (topicUri, event) where event is the published data
-                    var payload = event;
-                    if (typeof payload === 'string') {
-                        try { payload = JSON.parse(payload); } catch(e) { return; }
+                // Subscribe to global WhatsApp topic for new chats
+                var globalTopic = 'whatsapp.message';
+                
+                App.webSocketManager.subscribe(globalTopic, function(data) {
+                    if (typeof data === 'string') {
+                        try { data = JSON.parse(data); } catch(e) { return; }
                     }
-                    if (payload && (payload.action === 'message' || payload.action === 'message_ack')) {
-                        onRealTimeMessage(payload.data, payload.action);
+                    
+                    console.log('WA WebSocket received on ' + globalTopic + ':', data);
+                    
+                    // If we have a chat open, check if this is for the current chat
+                    if (state.screen === 'chat' && state.chatId && data.chatId === state.chatId) {
+                        if (data.action === 'message') {
+                            onRealTimeMessage(data.data, 'message');
+                        } else if (data.action === 'message_ack') {
+                            onRealTimeMessage(data.data, 'message_ack');
+                        }
+                    } else {
+                        // Update chat list
+                        if (state.isOpen) {
+                            loadChats();
+                        }
                     }
                 });
+                
                 state.subscribed = true;
-                console.log('WA Widget: Subscribed to WebSocket topic WhatsApp');
+                state.wsRetryCount = 0;
+                console.log('WA Widget: Subscribed to WebSocket topic: ' + globalTopic);
                 return;
             } catch(e) {
-                console.warn('WA Widget: WebSocket subscribe failed, falling back to polling', e);
+                console.warn('WA Widget: WebSocket subscribe failed, retrying...', e);
             }
         }
 
-        // Fallback: poll for new messages every 5s
-        if (!state.messagePollingActive) {
-            startMessagePolling();
-        }
+        // Fallback: poll if WebSocket not available
+        console.warn('WA Widget: WebSocket not available, falling back to polling');
+        startMessagePolling();
 
-        // Retry WebSocket after some time
+        // Retry WebSocket connection
         if (!state.wsRetryCount) state.wsRetryCount = 0;
         if (state.wsRetryCount < 5) {
             state.wsRetryCount++;
@@ -470,12 +468,11 @@
     function startMessagePolling() {
         if (state.messagePollingActive) return;
         state.messagePollingActive = true;
-        console.log('WA Widget: Starting message polling (direct API)');
+        console.log('WA Widget: Starting message polling (fallback)');
 
         state.messagePollInterval = setInterval(function() {
             if (!state.isOpen) return;
 
-            // Poll currently open chat directly from WhatsApp API
             if (state.screen === 'chat' && state.chatId) {
                 api('GET', 'WhatsApp/action/getChatMessages', {
                     chatId: state.chatId,
@@ -493,19 +490,16 @@
                             var existId = (state.messages[i].id && state.messages[i].id._serialized) || state.messages[i].id || state.messages[i].messageId || state.messages[i].tempId;
                             if (existId === id) {
                                 found = true;
-                                // Update ack/status if changed
                                 if (msg.ack !== undefined && state.messages[i].ack !== msg.ack) {
                                     state.messages[i].ack = msg.ack;
                                     changed = true;
                                 }
-                                // Replace optimistic messages
                                 if (state.messages[i]._optimistic) {
                                     state.messages[i] = msg;
                                     changed = true;
                                 }
                                 break;
                             }
-                            // Match optimistic by body
                             if (state.messages[i]._optimistic && state.messages[i].body === msg.body && state.messages[i].fromMe && msg.fromMe) {
                                 state.messages[i] = msg;
                                 found = true;
@@ -525,11 +519,10 @@
                 }).catch(function() {});
             }
 
-            // Also refresh chat list periodically
             if (state.screen === 'chatList') {
                 loadChats();
             }
-        }, 5000);
+        }, config.pollInterval);
     }
 
     function stopMessagePolling() {
@@ -544,13 +537,11 @@
         if (!msg) return;
         action = action || 'message';
 
-        // 1. Append to Chat View if open
         if (state.screen === 'chat' && state.chatId === msg.chatId) {
             var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
             var isDuplicate = false;
 
             if (action === 'message_ack') {
-                // Just update status of existing message
                 for (var i = 0; i < state.messages.length; i++) {
                     var existing = state.messages[i];
                     var existingId = (existing.id && existing.id._serialized) || existing.id || existing.messageId || existing.tempId;
@@ -562,22 +553,19 @@
                 }
                 renderMessages(state.messages);
             } else {
-                // Check if message already exists
                 for (var i = 0; i < state.messages.length; i++) {
                     var existing = state.messages[i];
                     var existingId = (existing.id && existing.id._serialized) || existing.id || existing.messageId || existing.tempId;
 
                     if (existingId === id) {
                         isDuplicate = true;
-                        state.messages[i] = msg; // Update with latest data
+                        state.messages[i] = msg;
                         break;
                     }
 
-                    // Check for optimistic match to replace it
                     if (existing._optimistic && existing.body === msg.body && existing.fromMe && msg.fromMe) {
-                        // Replace optimistic with real message
                         state.messages[i] = msg;
-                        isDuplicate = true; // We don't want to push a new one
+                        isDuplicate = true;
                         break;
                     }
                 }
@@ -590,7 +578,6 @@
             }
         }
 
-        // 2. Refresh Chat List/State locally to save network & re-sort
         if (state.isOpen) {
             var chatFound = false;
             for (var j = 0; j < state.chats.length; j++) {
@@ -612,9 +599,9 @@
             }
 
             if (!chatFound && action === 'message') {
-                loadChats(); // New chat, need to fetch from API
+                loadChats();
             } else if (state.screen === 'chatList') {
-                renderChatList(state.chats); // Re-render to sort and show updates
+                renderChatList(state.chats);
             }
         }
     }
@@ -628,7 +615,6 @@
             showScreen('login');
             startSession();
             
-             // Clear state
              state.chats = [];
              state.messages = [];
              state.contacts = [];
@@ -647,7 +633,7 @@
         if (state.qrPollTimeout) { clearTimeout(state.qrPollTimeout); state.qrPollTimeout = null; }
 
         var btn = _$('wa-connect-btn');
-        var area = _$('wa-qr-area'); // Note: area id might need check if removed from HTML, but we kept structure
+        var area = _$('wa-qr-area');
         var spinner = _$('wa-qr-spinner');
         var qrc = _$('wa-qr-container');
 
@@ -656,7 +642,6 @@
         if (qrc) qrc.style.display = 'none';
 
         api('GET', 'WhatsApp/action/login').then(function () {
-            // Wait a bit for puppeteer to init
             state.qrPollTimeout = setTimeout(function() { pollQR(0); }, 2000);
         }).catch(function () {
              state.sessionStarting = false;
@@ -677,14 +662,12 @@
             if (r.qrImage) {
                 var img = _$('wa-qr-img');
                 if (img) img.src = r.qrImage;
-                if (_$('wa-qr-container')) _$('wa-qr-container').style.display = 'flex'; // Flex to center img
+                if (_$('wa-qr-container')) _$('wa-qr-container').style.display = 'flex';
                 if (_$('wa-qr-spinner')) _$('wa-qr-spinner').style.display = 'none';
                 if (_$('wa-connect-btn')) _$('wa-connect-btn').style.display = 'none';
                 
-                // Keep polling
                 state.qrPollTimeout = setTimeout(function() { pollQR(attempts + 1); }, 3000); 
             } else {
-                 // No QR image? Maybe connected or not ready yet.
                  api('GET', 'WhatsApp/action/status').then(function(s) {
                      var isConnected = s.isConnected || 
                                        s.status === 'CONNECTED' || 
@@ -697,7 +680,6 @@
                          showScreen('chatList');
                          loadChats();
                      } else {
-                         // Not connected yet, maybe initializing
                          state.qrPollTimeout = setTimeout(function() { pollQR(attempts + 1); }, 2000);
                      }
                  });
@@ -720,7 +702,7 @@
         var list = _$('wa-contacts-list');
         if (list) list.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
         api('GET', 'WhatsApp/action/getContacts').then(function(r) {
-            state.contacts = deduplicateContacts(r.list || []); // DEDUPLICATE
+            state.contacts = deduplicateContacts(r.list || []);
             renderContacts(state.contacts);
         });
     }
@@ -728,20 +710,18 @@
     function openChat(chatId, chatName) {
         state.chatId = chatId;
         state.chatName = chatName;
-        state.messages = []; // Clear old messages immediately to prevent duplication/flashing
+        state.messages = [];
         showScreen('chat');
 
         var container = _$('wa-messages-container');
         if (container) container.innerHTML = '<div class="wa-loading"><div class="wa-spinner"></div></div>';
 
-        // Fetch da API con limite aumentato
         api('GET', 'WhatsApp/action/getChatMessages', { 
             chatId: chatId, 
             limit: 100 
         }).then(function (r) {
             var apiMessages = r.list || [];
             
-            // Merge con messaggi salvati localmente (entities)
             mergeMessages(apiMessages, chatId).then(function(merged) {
                 state.messages = merged;
                 if (state.messages.length) {
@@ -769,10 +749,6 @@
             var dbMessages = dbResult.list || [];
             var merged = {};
             
-            // Merge and deduplicate by messageId
-            // Prioritize DB messages for persistence, but API might be newer/better status
-            // Actually, API (wwebjs) is usually source of truth for body/status.
-            
             apiMessages.forEach(function(msg) {
                 var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
                 if (!id) return;
@@ -783,7 +759,6 @@
                 var id = msg.messageId;
                 if (!id) return;
                 if (!merged[id]) {
-                     // DB-only message — ensure it has proper status mapping
                      if (msg.status && !msg.ack) {
                          var st = msg.status.toLowerCase();
                          if (st === 'read' || st === 'played') msg.ack = 3;
@@ -792,7 +767,6 @@
                      }
                      merged[id] = msg;
                 } else {
-                    // API has this message too — preserve DB status if API has no ack
                     if (merged[id].ack === undefined && msg.status) {
                         var st = msg.status.toLowerCase();
                         if (st === 'read' || st === 'played') merged[id].ack = 3;
@@ -817,7 +791,6 @@
         var container = _$('wa-messages-container');
         if (!container) return;
         
-        // PRIMA: Prova database locale
         api('GET', 'WhatsAppMessage', {
             where: [{
                 type: 'equals',
@@ -834,7 +807,6 @@
                 showSystemMessage('Loaded ' + r.list.length + ' messages from local storage.');
                 return;
             }
-            // FALLBACK: lastMessage dalla chat list
             fallbackToLastMessageFromList(chatId, container);
         }).catch(function() {
             fallbackToLastMessageFromList(chatId, container);
@@ -892,13 +864,11 @@
         renderMessages(state.messages);
 
         api('POST', 'WhatsApp/action/sendMessage', { chatId: state.chatId, message: text }).then(function (r) {
-             // Success: update the tempId with real ID if provided
              if (r && r.messageId) {
                  for (var i = 0; i < state.messages.length; i++) {
                      if (state.messages[i].tempId === tempId) {
                          state.messages[i].id = r.messageId;
                          state.messages[i]._optimistic = false;
-                         // If WebSocket didn't give us a real ack yet, simulate SENT to remove hourglass
                          if (!state.messages[i].ack && state.messages[i].ack !== 0) {
                              state.messages[i].ack = 1; 
                              state.messages[i].status = 'Sent';
@@ -909,11 +879,10 @@
                  }
              }
         }).catch(function(e) {
-            // Handle send error: show error mark
             for (var i = 0; i < state.messages.length; i++) {
                 if (state.messages[i].tempId === tempId) {
                     state.messages[i].body += ' \u26A0\uFE0F (Error)';
-                    state.messages[i].ack = -1; // Negative ack for error
+                    state.messages[i].ack = -1;
                     state.messages[i]._optimistic = false;
                     renderMessages(state.messages);
                     break;
@@ -937,7 +906,6 @@
              });
         }
         
-        // Sort by timestamp (newest first)
         chats.sort(function(a, b) {
             var tA = (a.lastMessage && a.lastMessage.timestamp) ? normalizeTimestamp(a.lastMessage.timestamp) : 0;
             var tB = (b.lastMessage && b.lastMessage.timestamp) ? normalizeTimestamp(b.lastMessage.timestamp) : 0;
@@ -979,8 +947,6 @@
 
         _$('wa-contacts-list').innerHTML = '';
         
-        window.waDebugContacts = contacts; // DEBUG: Expose to window
-        
         if (!contacts || contacts.length === 0) {
             _$('wa-contacts-list').innerHTML = '<div class="wa-empty-state">No contacts found.</div>';
             return;
@@ -1014,7 +980,6 @@
             '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔', '❣️', '💕',
             '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉',
             '🔥', '💧', '💫', '⭐', '🌟', '✨', '⚡', '☄️', '💥', '💢'
-            // Add more as needed
         ];
         
         var html = '<div class="wa-emoji-grid">';
@@ -1040,12 +1005,11 @@
             
             if (m.fromMe) {
                 if (m._optimistic) {
-                    icon = ' \u23f3'; // Hourglass for pending optimistic only
+                    icon = ' \u23f3';
                 } else {
                     var ack = m.ack;
                     var st = m.status ? m.status.toLowerCase() : '';
                     
-                    // Map DB status to ack if ack is missing
                     if (ack === undefined || ack === null) {
                         if (st === 'read' || st === 'played') ack = 3;
                         else if (st === 'delivered') ack = 2;
@@ -1059,9 +1023,9 @@
                     } else if (ack >= 1 || st === 'sent') {
                         icon = ' <span style="opacity:0.6;">\u2713</span>';
                     } else if (ack === 0) {
-                        icon = ' <span style="opacity:0.6;">\u2713</span>'; // Server received = single check
+                        icon = ' <span style="opacity:0.6;">\u2713</span>';
                     } else {
-                        icon = ' <span style="opacity:0.6;">\u2713</span>'; // Default to sent check, not hourglass
+                        icon = ' <span style="opacity:0.6;">\u2713</span>';
                     }
                 }
             }
@@ -1075,12 +1039,10 @@
     }
 
     /* ── Theme Detection ────────────────────────────────────────── */
-    /* ── Theme Detection ────────────────────────────────────────── */
     function updateTheme() {
         var panel = _$('wa-panel-root');
         if (!panel) return;
         
-        // Check LocalStorage first
         var saved = localStorage.getItem('wa-theme-pref');
         if (saved) {
              if (saved === 'dark') panel.classList.add('wa-dark');
@@ -1088,7 +1050,6 @@
              return;
         }
 
-        // Auto-detect
         var isDark = document.body.classList.contains('dark') || 
                      document.body.classList.contains('dark-theme') || 
                      document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1112,15 +1073,13 @@
         var panel = _$('wa-panel-root');
         var isDark = panel.classList.contains('wa-dark');
         if (isDark) {
-            // Switch to Light
             panel.classList.remove('wa-dark');
             localStorage.setItem('wa-theme-pref', 'light');
-            updateTheme(); // Trigger icon update
+            updateTheme();
         } else {
-            // Switch to Dark
             panel.classList.add('wa-dark');
             localStorage.setItem('wa-theme-pref', 'dark');
-            updateTheme(); // Trigger icon update
+            updateTheme();
         }
     }
 
@@ -1141,7 +1100,7 @@
     }
 
     function makeDraggable() {
-        var panel = _$('wa-panel-root'); // Root is the moving part
+        var panel = _$('wa-panel-root');
         var header = panel.querySelector('.wa-panel-header');
         if (!panel || !header) return;
 
@@ -1149,34 +1108,6 @@
         var currentX, currentY, initialX, initialY;
         var xOffset = 0, yOffset = 0;
         var panelWidth, panelHeight, originalLeft, originalTop;
-
-        // Restore position
-        var savedPos = localStorage.getItem('wa-panel-position');
-        if (savedPos) {
-            try {
-                var pos = JSON.parse(savedPos);
-                // Root is fixed right/bottom by default.
-                // We need to switch to left/top or transform to move it freely
-                // Simplest is to set right/bottom to auto and use left/top, 
-                // OR use transform translate.
-                // But our CSS resize implementation sets width/height/right/bottom.
-                
-                // Let's use left/top overrides if we drag?
-                // Or manipulate existing right/bottom?
-                // Let's stick to Right/Bottom as base but modify them?
-                // Actually, standard drag uses left/top.
-                
-                // If we want to support both resize and drag, it gets tricky because resize depends on specific anchor (e.g. bottom-right).
-                // Let's assume we drag the WHOLE window.
-                
-                // Let's use transform for dragging to avoid fighting with resize layout?
-                // But resize changes dimensions.
-                
-                // Let's switch to left/top positioning once dragged?
-            } catch(e) {
-                console.error('Failed to restore panel position:', e);
-            }
-        }
         
         header.style.cursor = 'move';
         
@@ -1186,26 +1117,23 @@
 
         function dragStart(e) {
             if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-            e.preventDefault(); // Prevents browser text selection issues
+            e.preventDefault();
             
-            // Let's try transform translate
             if (!xOffset) xOffset = 0;
             if (!yOffset) yOffset = 0;
             
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;
 
-            // Capture dimensions for snapping
             var rect = panel.getBoundingClientRect();
             panelWidth = rect.width;
             panelHeight = rect.height;
-            // original position (where transform(0,0) puts it)
             originalLeft = rect.left - xOffset;
             originalTop = rect.top - yOffset;
 
             isDragging = true;
-            panel.classList.add('wa-dragging'); // Disable transitions
-            document.body.style.userSelect = 'none'; // Prevent text selection
+            panel.classList.add('wa-dragging');
+            document.body.style.userSelect = 'none';
         }
 
         function drag(e) {
@@ -1215,12 +1143,10 @@
             var rawX = e.clientX - initialX;
             var rawY = e.clientY - initialY;
             
-            // Snapping Logic
             var SNAP_THRESHOLD = 20;
             var viewportWidth = window.innerWidth;
             var viewportHeight = window.innerHeight;
             
-            // Calculate proposed absolute position
             var proposedLeft = originalLeft + rawX;
             var proposedTop = originalTop + rawY;
             var proposedRight = proposedLeft + panelWidth;
@@ -1229,20 +1155,16 @@
             var finalX = rawX;
             var finalY = rawY;
             
-            // Snap Left
             if (Math.abs(proposedLeft) < SNAP_THRESHOLD) {
                 finalX = -originalLeft;
             } 
-            // Snap Right
             else if (Math.abs(viewportWidth - proposedRight) < SNAP_THRESHOLD) {
                 finalX = viewportWidth - panelWidth - originalLeft;
             }
             
-            // Snap Top
             if (Math.abs(proposedTop) < SNAP_THRESHOLD) {
                 finalY = -originalTop;
             }
-            // Snap Bottom
             else if (Math.abs(viewportHeight - proposedBottom) < SNAP_THRESHOLD) {
                 finalY = viewportHeight - panelHeight - originalTop;
             }
@@ -1263,9 +1185,7 @@
             isDragging = false;
             
             panel.classList.remove('wa-dragging');
-            document.body.style.userSelect = ''; // Restore text selection
-            
-            // Save?
+            document.body.style.userSelect = '';
         }
         
         function setTranslate(xPos, yPos, el) {
@@ -1279,7 +1199,6 @@
 
         var root = document.createElement('div');
         root.id = 'wa-panel-root';
-        // Inner Panel Content
         var panelHtml = [
             '<div class="whatsapp-widget-panel" id="wa-panel">',
             '  <div class="wa-panel-header" style="z-index:10001;position:relative;">',
@@ -1293,14 +1212,13 @@
             '           <svg class="wa-theme-icon-sun" style="display:none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.29 1.29c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.29 1.29c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.29-1.29zm1.41-13.78c-.39-.39-1.02-.39-1.41 0l-1.29 1.29c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.29-1.29c.39-.39.39-1.02 0-1.41zM7.28 17.39c-.39-.39-1.02-.39-1.41 0l-1.29 1.29c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.29-1.29c.39-.39.39-1.02 0-1.41z"/></svg>',
             '           <svg class="wa-theme-icon-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>',
             '       </button>',
-            '       <button class="wa-icon-btn" id="wa-btn-new-chat" title="New Chat" style="display:none">', // Initially hidden, shown in chat list? No, header is global.
+            '       <button class="wa-icon-btn" id="wa-btn-new-chat" title="New Chat" style="display:none">',
             '           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
             '       </button>',
             '    </div>',
             '    <button class="wa-logout-btn" id="wa-logout-btn" title="Logout" style="display:none">\u23FB</button>',
             '    <button class="wa-close-btn" id="wa-close-btn">\u2715</button>',
             '  </div>',
-            
             '  <div class="wa-screen active" id="wa-screen-login">',
             '     <div class="wa-login-container">',
             '       <div class="wa-login-text">',
@@ -1319,18 +1237,16 @@
             '          <div class="wa-qr-container" id="wa-qr-container" style="display:none">',
             '             <img id="wa-qr-img" src="" alt="Scan me" style="display:block; width: 100%; height: auto;"/>',
             '          </div>',
-            '          <button class="wa-icon-btn" id="wa-refresh-qr" style="display:none;margin-top:10px" title="Refresh QR">\u21BB Refresh QR</button>',
+            '          <button class="wa-icon-btn" id="wa-btn-refresh-qr" style="display:none;margin-top:10px" title="Refresh QR">\u21BB Refresh QR</button>',
             '       </div>',
             '     </div>',
             '  </div>',
-
             '  <div class="wa-screen" id="wa-screen-chatList">',
             '     <div class="wa-search-bar">',
             '       <input type="text" id="wa-search-input" autocomplete="off" placeholder="Search chats \u2026">',
             '     </div>', 
             '     <div class="wa-panel-body" id="wa-chat-list"></div>',
             '  </div>',
-
             '  <div class="wa-screen" id="wa-screen-chat">',
             '     <div class="wa-messages-container" id="wa-messages-container"></div>',
             '     <div class="wa-send-box">',
@@ -1340,168 +1256,74 @@
             '     </div>',
             '     <div id="wa-emoji-picker" class="wa-emoji-picker" style="display:none;">' + buildEmojiPicker() + '</div>',
             '  </div>',
-            
             '  <div class="wa-screen" id="wa-screen-contacts">',
-            '      <div class="wa-search-bar">', // Added search for contacts too?
+            '      <div class="wa-search-bar">',
             '         <input type="text" id="wa-contact-search" autocomplete="off" placeholder="Search contacts \u2026">',
             '      </div>',
             '      <div class="wa-panel-body" id="wa-contacts-list"></div>',
             '  </div>',
-
-            '</div>' // End .whatsapp-widget-panel
+            '</div>'
         ].join('');
-        
+
         root.innerHTML = panelHtml;
         document.body.appendChild(root);
-        
-        // Inject Resizers
-        var resizers = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-        resizers.forEach(function(dir) {
-            var el = document.createElement('div');
-            el.className = 'wa-resizer ' + dir;
-            root.appendChild(el); // Append to ROOT
-            
-            // Resize Logic
-            el.addEventListener('mousedown', function(e) {
-                e.preventDefault(); e.stopPropagation();
-                root.classList.add('wa-resizing'); // Add class to root to disable pointers
-                
-                var startX = e.clientX, startY = e.clientY;
-                var rect = root.getBoundingClientRect();
-                var startW = rect.width, startH = rect.height;
-                var styles = window.getComputedStyle(root);
-                var startRight = parseFloat(styles.right); // Root uses right
-                var startBottom = parseFloat(styles.bottom); // Root uses bottom
-                
-                function onMove(e) {
-                    var dx = e.clientX - startX;
-                    var dy = e.clientY - startY;
-                    
-                    // Width logic (Dragging Left increases Width, Dragging Right increases Width but must adjust Right pos)
-                    
-                    if (dir.indexOf('w') !== -1) {
-                        root.style.width = Math.max(300, startW - dx) + 'px';
-                    }
-                    if (dir.indexOf('e') !== -1) {
-                         // Increasing width to the right means shifting right edge. 
-                         var newW = Math.max(300, startW + dx);
-                         root.style.width = newW + 'px';
-                         root.style.right = (startRight - (newW - startW)) + 'px';
-                    }
-                    
-                    if (dir.indexOf('n') !== -1) {
-                        // Dragging Up (-dy) -> Increase Height
-                        root.style.height = Math.max(400, startH - dy) + 'px';
-                    }
-                    if (dir.indexOf('s') !== -1) {
-                        // Dragging Down (+dy) -> Increase Height, Decrease Bottom
-                        var newH = Math.max(400, startH + dy);
-                        root.style.height = newH + 'px';
-                        root.style.bottom = (startBottom - (newH - startH)) + 'px';
-                    }
-                }
-                function onUp() {
-                    root.classList.remove('wa-resizing');
-                    window.removeEventListener('mousemove', onMove);
-                    window.removeEventListener('mouseup', onUp);
-                }
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('mouseup', onUp);
-            });
+        initAvatarObserver();
+        makeDraggable();
+
+        var closeBtn = _$('wa-close-btn');
+        if (closeBtn) closeBtn.onclick = function() { close(); };
+
+        var backBtn = _$('wa-back-btn');
+        if (backBtn) backBtn.onclick = function() { showScreen('chatList'); };
+
+        var searchInput = _$('wa-search-input');
+        if (searchInput) searchInput.oninput = function() { renderChatList(state.chats); };
+
+        var contactSearch = _$('wa-contact-search');
+        if (contactSearch) contactSearch.oninput = function() { renderContacts(state.contacts); };
+
+        var sendBtn = _$('wa-send-btn');
+        if (sendBtn) sendBtn.onclick = sendMessage;
+
+        var msgInput = _$('wa-message-input');
+        if (msgInput) msgInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
         });
 
-        // Event Listeners
-        var closeBtn = _$('wa-close-btn'); if(closeBtn) closeBtn.onclick = close;
-        var connBtn = _$('wa-connect-btn'); if(connBtn) connBtn.onclick = function() { startSession(); };
-        var refBtn = _$('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
-        var backBtn = _$('wa-back-btn'); 
-        if(backBtn) {
-            backBtn.onclick = function() { 
-                // Always go back to chatList from sub-screens
-                showScreen('chatList'); 
-            };
-        }
-        var sendBtn = _$('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
-        var msgInput = _$('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
-        var lootBtn = _$('wa-logout-btn'); if(lootBtn) lootBtn.onclick = function() { logout(); }; // Use new logout function
-        var searchInp = _$('wa-search-input'); if(searchInp) searchInp.onkeyup = function() { renderChatList(state.chats); };
-        
-        // Emoji Events
-        var emoBtn = _$('wa-emoji-btn'); 
-        if(emoBtn) emoBtn.onclick = function(e) {
-            var picker = _$('wa-emoji-picker');
-            if (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-        };
-        
-        // Emoji selection delegation
-        var picker = _$('wa-emoji-picker');
-        if (picker) {
-            picker.addEventListener('click', function(e) {
-                if (e.target.classList.contains('wa-emoji-item')) {
-                    var emoji = e.target.getAttribute('data-emoji');
-                    var input = _$('wa-message-input');
-                    if (input) {
-                        input.value += emoji;
-                        input.focus();
-                    }
-                    // Optional: close picker
-                    // picker.style.display = 'none';
-                }
-            });
-        }
-        
-        // New Chat Button (in Header)
-        var newChatBtn = _$('wa-btn-new-chat'); 
-        if(newChatBtn) newChatBtn.onclick = function() { showScreen('contacts'); loadContacts(); };
-        
-        // Contact Search
-        var contSearch = _$('wa-contact-search'); 
-        if(contSearch) contSearch.onkeyup = function() { renderContacts(state.contacts); };
-        
-        // Theme Toggle
-        var themeBtn = _$('wa-theme-btn'); if(themeBtn) themeBtn.onclick = toggleTheme;
+        var connectBtn = _$('wa-connect-btn');
+        if (connectBtn) connectBtn.onclick = startSession;
 
-        // Ensure updateTheme check immediately
-        setTimeout(updateTheme, 0);
-        
-        makeDraggable();
+        var logoutBtn = _$('wa-logout-btn');
+        if (logoutBtn) logoutBtn.onclick = logout;
+
+        var themeBtn = _$('wa-theme-btn');
+        if (themeBtn) themeBtn.onclick = toggleTheme;
     }
 
-    /* ── Renderers ──────────────────────────────────────────────── */
-    // ... existing renderer functions ...
-
-
-    /* ── Init ───────────────────────────────────────────────────── */
+    /* ── Initialization ────────────────────────────────────────── */
     function init() {
         if (state.initialized) return;
-        if (typeof Espo === 'undefined' || !Espo.Ajax || !document.body) {
-            setTimeout(init, 500); return;
-        }
         state.initialized = true;
-        initAvatarObserver();
-        buildButton(); // Button is built, panel is built heavily lazy or on click
-        
-        // Check status
-        api('GET', 'WhatsApp/action/status').then(function(r) {
-             config.enabled = r.enabled !== false;
-             var btn = _$('whatsapp-floating-btn');
-             if (btn) btn.style.display = config.enabled ? 'flex' : 'none';
-             if (config.enabled) {
-                 checkStatus();
-                 setInterval(function() { if (!state.isOpen) checkStatus(); }, 30000);
-             }
-        }).catch(function() {});
+
+        buildButton();
+        checkStatus();
+        startPolling();
+
+        console.log('WhatsApp Widget initialized');
     }
 
+    // Auto-init when document ready or on demand
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 1000); });
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        setTimeout(init, 1000);
+        init();
     }
-    window.addEventListener('hashchange', function() { if (!state.initialized) init(); else {
-        if (config.enabled && !_$('whatsapp-floating-btn')) buildButton();
-        updateTheme();
-    }});
-    
-})();
 
+    // Export for manual control
+    window.WhatsAppWidget = {
+        open: open,
+        close: close,
+        toggle: toggle,
+        openChat: openChat
+    };
+})();
