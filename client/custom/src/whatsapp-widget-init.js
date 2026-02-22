@@ -460,7 +460,11 @@
                     }
                 } catch(e) {}
 
-                var url = protocol + '//' + window.location.hostname + port + '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
+                var url = protocol + '//' + window.location.hostname + port;
+                if (protocol === 'wss:') {
+                    url += '/wss';
+                }
+                url += '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
                 state.wampConnection = new ab.Session(url,
                     // onOpen
                     function() {

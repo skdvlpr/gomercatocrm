@@ -89,16 +89,43 @@ class WhatsApp extends Base
             throw new BadRequest('chatId is required');
         }
 
-        // Fetch from WhatsApp API (Real-time from phone)
-        $limit = (int) ($request->getQueryParam('limit') ?? 100);
-        $result = $this->getWhatsAppClient()->getChatMessages($chatId, $limit);
+        $limit = (int) ($request->getQueryParam('limit') ?? 50);
 
-        // Map API result to expected format if needed, but the client usually handles wwebjs format.
-        // The WhatsAppClient::getChatMessages returns array of message objects.
-        // We might need to ensure consistency.
+        // PRIMARY: Read from local DB (saved by webhook)
+        $entityManager = $this->getContainer()->get('entityManager');
+        $collection = $entityManager->getRepository('WhatsAppMessage')
+            ->where(['chatId' => $chatId])
+            ->order('timestamp', 'ASC')
+            ->limit($limit)
+            ->find();
 
-        // If result is empty, try DB? Or just return result.
-        // API returns standard wwebjs Message objects.
+        // Map entity fields to the format the frontend expects
+        $result = [];
+        foreach ($collection as $msg) {
+            $fromMe = (bool) $msg->get('fromMe');
+            $result[] = [
+                'id' => $msg->get('messageId') ?: $msg->getId(),
+                'messageId' => $msg->get('messageId') ?: $msg->getId(),
+                'body' => $msg->get('body') ?? '',
+                'chatId' => $msg->get('chatId') ?? $chatId,
+                'fromMe' => $fromMe,
+                'timestamp' => $msg->get('timestamp') ? strtotime($msg->get('timestamp')) : time(),
+                'ack' => $fromMe ? 1 : 0,
+                'status' => $msg->get('status') ?? 'Received',
+            ];
+        }
+
+        // FALLBACK: If DB has no messages, try the WAHA API
+        if (empty($result)) {
+            try {
+                $apiResult = $this->getWhatsAppClient()->getChatMessages($chatId, $limit);
+                if (!empty($apiResult)) {
+                    $result = $apiResult;
+                }
+            } catch (\Throwable $e) {
+                $GLOBALS['log']->warning('WhatsApp getChatMessages API fallback failed: ' . $e->getMessage());
+            }
+        }
 
         return [
             'success' => true,
@@ -233,7 +260,7 @@ class WhatsApp extends Base
                             'ack' => 1,  // Sent
                             'status' => 'Sent'
                         ]);
-                        
+
                         $GLOBALS['log']->info('WhatsApp message broadcasted via WebSocket: ' . $realId);
                     } catch (\Throwable $e) {
                         // Ignore WebSocket errors to prevent blocking message sending
@@ -351,7 +378,7 @@ class WhatsApp extends Base
                     'ack' => $fromMe ? 1 : 0,
                     'status' => $fromMe ? 'Sent' : 'Received'
                 ]);
-                
+
                 $GLOBALS['log']->info('WhatsApp incoming message broadcasted via WebSocket: ' . ($msgId ?: $msgEntity->getId()));
             } catch (\Throwable $e) {
                 $GLOBALS['log']->error('WhatsApp WebSocket broadcast error: ' . $e->getMessage());
