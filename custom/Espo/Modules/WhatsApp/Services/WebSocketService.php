@@ -2,18 +2,18 @@
 
 namespace Espo\Modules\WhatsApp\Services;
 
-use Espo\Core\WebSocket\Submission;
+use Espo\Core\WebSocket\Sender;
 
 /**
  * Service for broadcasting WhatsApp messages via WebSocket
  */
 class WebSocketService
 {
-    private $submission;
+    private $sender;
 
-    public function __construct(Submission $submission)
+    public function __construct(Sender $sender)
     {
-        $this->submission = $submission;
+        $this->sender = $sender;
     }
 
     /**
@@ -25,7 +25,7 @@ class WebSocketService
      */
     public function broadcastMessage($chatId, $messageData)
     {
-        $topic = 'WhatsApp';
+        $topic = 'whatsapp.message.' . $chatId;
 
         $payload = [
             'action' => 'message',
@@ -34,7 +34,7 @@ class WebSocketService
             'timestamp' => time()
         ];
 
-        $this->submission->submit($topic, null, $payload);
+        $this->sender->send($topic, $payload);
     }
 
     /**
@@ -48,7 +48,7 @@ class WebSocketService
      */
     public function broadcastMessageAck($chatId, $messageId, $ack, $status = null)
     {
-        $topic = 'WhatsApp';
+        $topic = 'whatsapp.message.' . $chatId;
 
         $payload = [
             'action' => 'message_ack',
@@ -61,7 +61,7 @@ class WebSocketService
             'chatId' => $chatId
         ];
 
-        $this->submission->submit($topic, null, $payload);
+        $this->sender->send($topic, $payload);
     }
 
     /**
@@ -73,7 +73,7 @@ class WebSocketService
      */
     public function broadcastTyping($chatId, $isTyping = true)
     {
-        $topic = 'WhatsApp';
+        $topic = 'whatsapp.message.' . $chatId;
 
         $payload = [
             'action' => 'typing',
@@ -84,6 +84,6 @@ class WebSocketService
             'chatId' => $chatId
         ];
 
-        $this->submission->submit($topic, null, $payload);
+        $this->sender->send($topic, $payload);
     }
 }
