@@ -435,7 +435,7 @@
                 var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 var port = window.location.port ? ':' + window.location.port : '';
                 if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
-                    port = ':8443'; // Default ddev wss port for EspoCRM
+                    port = ''; // Use standard port, rely on /wss proxy
                 }
                 var authToken = '';
                 var match = document.cookie.match(new RegExp('(^| )auth-token=([^;]+)'));
@@ -451,11 +451,16 @@
                 }
                 var userId = 'system';
                 try {
-                    var espoUserStr = localStorage.getItem('espo-user');
-                    if (espoUserStr) {
-                        var espoUser = JSON.parse(espoUserStr);
-                        if (espoUser.lastUserId) {
-                            userId = espoUser.lastUserId;
+                    var lsUserId = localStorage.getItem('espo-user-lastUserId');
+                    if (lsUserId) {
+                        userId = lsUserId;
+                    } else {
+                        var espoUserStr = localStorage.getItem('espo-user');
+                        if (espoUserStr) {
+                            var espoUser = JSON.parse(espoUserStr);
+                            if (espoUser.user && espoUser.user.id) {
+                                userId = espoUser.user.id;
+                            }
                         }
                     }
                 } catch(e) {}
