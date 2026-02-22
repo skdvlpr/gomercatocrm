@@ -449,7 +449,16 @@
                         } catch(e) {}
                     }
                 }
-                var userId = localStorage.getItem('espo-user-lastUserId') || 'system';
+                var userId = 'system';
+                try {
+                    var espoUserStr = localStorage.getItem('espo-user');
+                    if (espoUserStr) {
+                        var espoUser = JSON.parse(espoUserStr);
+                        if (espoUser.lastUserId) {
+                            userId = espoUser.lastUserId;
+                        }
+                    }
+                } catch(e) {}
 
                 var url = protocol + '//' + window.location.hostname + port + '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
                 state.wampConnection = new ab.Session(url,
