@@ -7,7 +7,7 @@ use Espo\Core\Api\Response;
 use Espo\Core\Exceptions\BadRequest;
 use Espo\Custom\Core\WhatsApp\WhatsAppClient;
 use Espo\Core\InjectableFactory;
-use Espo\Core\WebSocket\Submission as WebSocketSubmission;
+use Espo\Modules\WhatsApp\Services\WebSocketService;
 
 class WhatsApp extends Base
 {
@@ -16,6 +16,16 @@ class WhatsApp extends Base
         /** @var InjectableFactory $factory */
         $factory = $this->getContainer()->get('injectableFactory');
         return $factory->create(WhatsAppClient::class);
+    }
+
+    /**
+     * Get WebSocketService for real-time event broadcasting
+     */
+    private function getWebSocketService(): WebSocketService
+    {
+        /** @var InjectableFactory $factory */
+        $factory = $this->getContainer()->get('injectableFactory');
+        return $factory->create(WebSocketService::class);
     }
 
     public function getActionLogin(Request $request, Response $response): array
@@ -158,6 +168,14 @@ class WhatsApp extends Base
         return ['success' => $result];
     }
 
+    /**
+     * Send a message via WhatsApp and broadcast via WebSocket
+     * 
+     * POST /WhatsApp/action/sendMessage
+     * Parameters:
+     *   - chatId (string): Chat/phone ID
+     *   - message (string): Message text
+     */
     public function postActionSendMessage(Request $request, Response $response): array
     {
         $data = $request->getParsedBody();
@@ -203,19 +221,23 @@ class WhatsApp extends Base
                     ]);
                     $entityManager->saveEntity($msgEntity);
 
-                    // 3. Publish via WebSocket
+                    // 3. 🔥 Broadcast via WebSocket in real-time
                     try {
-                        if ($this->getContainer()->has(WebSocketSubmission::class)) {
-                            /** @var WebSocketSubmission $ws */
-                            $ws = $this->getContainer()->get(WebSocketSubmission::class);
-                            $ws->submit('WhatsApp', null, [
-                                'action' => 'message',
-                                'data' => $msgEntity->toArray()
-                            ]);
-                        }
+                        $wsService = $this->getWebSocketService();
+                        $wsService->broadcastMessage($phone, [
+                            'id' => $realId,
+                            'body' => $message,
+                            'chatId' => $phone,
+                            'fromMe' => true,
+                            'timestamp' => time(),
+                            'ack' => 1,  // Sent
+                            'status' => 'Sent'
+                        ]);
+                        
+                        $GLOBALS['log']->info('WhatsApp message broadcasted via WebSocket: ' . $realId);
                     } catch (\Throwable $e) {
                         // Ignore WebSocket errors to prevent blocking message sending
-                        $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
+                        $GLOBALS['log']->error('WhatsApp WebSocket broadcast error: ' . $e->getMessage());
                     }
                 } catch (\PDOException $e) {
                     if ($e->getCode() != 23000 && strpos($e->getMessage(), '1062') === false) {
@@ -262,6 +284,10 @@ class WhatsApp extends Base
         return ['success' => true];
     }
 
+    /**
+     * Webhook handler for incoming messages from WhatsApp
+     * Also broadcasts incoming messages via WebSocket
+     */
     public function postActionWebhook(Request $request, Response $response): array
     {
         $data = $request->getParsedBody();
@@ -313,18 +339,22 @@ class WhatsApp extends Base
                 // Duplicate entry from race condition: already saved, continue to broadcast!
             }
 
-            // Publish via WebSocket
+            // 🔥 Broadcast via WebSocket
             try {
-                if ($this->getContainer()->has(WebSocketSubmission::class)) {
-                    /** @var WebSocketSubmission $ws */
-                    $ws = $this->getContainer()->get(WebSocketSubmission::class);
-                    $ws->submit('WhatsApp', null, [
-                        'action' => 'message',
-                        'data' => $msgEntity->toArray()
-                    ]);
-                }
+                $wsService = $this->getWebSocketService();
+                $wsService->broadcastMessage($chatId, [
+                    'id' => $msgId ?: $msgEntity->getId(),
+                    'body' => $body,
+                    'chatId' => $chatId,
+                    'fromMe' => $fromMe,
+                    'timestamp' => $timestamp,
+                    'ack' => $fromMe ? 1 : 0,
+                    'status' => $fromMe ? 'Sent' : 'Received'
+                ]);
+                
+                $GLOBALS['log']->info('WhatsApp incoming message broadcasted via WebSocket: ' . ($msgId ?: $msgEntity->getId()));
             } catch (\Throwable $e) {
-                $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
+                $GLOBALS['log']->error('WhatsApp WebSocket broadcast error: ' . $e->getMessage());
             }
         }
 
