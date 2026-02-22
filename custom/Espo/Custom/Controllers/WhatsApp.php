@@ -90,16 +90,64 @@ class WhatsApp extends Base
         }
 
         $limit = (int) ($request->getQueryParam('limit') ?? 50);
-
-        // PRIMARY: Read from local DB (saved by webhook)
         $entityManager = $this->getContainer()->get('entityManager');
+
+        // Step 1: Try fetching fresh messages from WAHA API and save new ones to DB
+        try {
+            $apiMessages = $this->getWhatsAppClient()->getChatMessages($chatId, $limit);
+            if (!empty($apiMessages)) {
+                foreach ($apiMessages as $apiMsg) {
+                    $msgId = null;
+                    if (isset($apiMsg['id']) && is_array($apiMsg['id'])) {
+                        $msgId = $apiMsg['id']['_serialized'] ?? null;
+                    } else {
+                        $msgId = $apiMsg['id'] ?? $apiMsg['messageId'] ?? null;
+                    }
+                    if (!$msgId)
+                        continue;
+
+                    // Check if already in DB
+                    $exists = $entityManager->getRepository('WhatsAppMessage')
+                        ->where(['messageId' => $msgId])
+                        ->findOne();
+                    if ($exists)
+                        continue;
+
+                    // Save new message to DB
+                    $msgEntity = $entityManager->getEntity('WhatsAppMessage');
+                    $fromMe = $apiMsg['fromMe'] ?? false;
+                    $body = $apiMsg['body'] ?? '';
+                    $timestamp = $apiMsg['timestamp'] ?? time();
+
+                    $msgEntity->set([
+                        'body' => $body,
+                        'chatId' => $chatId,
+                        'fromMe' => $fromMe,
+                        'timestamp' => date('Y-m-d H:i:s', is_numeric($timestamp) ? $timestamp : strtotime($timestamp)),
+                        'status' => $fromMe ? 'Sent' : 'Received',
+                        'messageId' => $msgId,
+                    ]);
+                    try {
+                        $entityManager->saveEntity($msgEntity);
+                    } catch (\PDOException $e) {
+                        // Ignore duplicate entry errors
+                        if ($e->getCode() != 23000 && strpos($e->getMessage(), '1062') === false) {
+                            $GLOBALS['log']->warning('WhatsApp getChatMessages save error: ' . $e->getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $GLOBALS['log']->warning('WhatsApp getChatMessages API fetch failed: ' . $e->getMessage());
+        }
+
+        // Step 2: Always read final result from DB (now has API + webhook messages merged)
         $collection = $entityManager->getRepository('WhatsAppMessage')
             ->where(['chatId' => $chatId])
             ->order('timestamp', 'ASC')
             ->limit($limit)
             ->find();
 
-        // Map entity fields to the format the frontend expects
         $result = [];
         foreach ($collection as $msg) {
             $fromMe = (bool) $msg->get('fromMe');
@@ -113,18 +161,6 @@ class WhatsApp extends Base
                 'ack' => $fromMe ? 1 : 0,
                 'status' => $msg->get('status') ?? 'Received',
             ];
-        }
-
-        // FALLBACK: If DB has no messages, try the WAHA API
-        if (empty($result)) {
-            try {
-                $apiResult = $this->getWhatsAppClient()->getChatMessages($chatId, $limit);
-                if (!empty($apiResult)) {
-                    $result = $apiResult;
-                }
-            } catch (\Throwable $e) {
-                $GLOBALS['log']->warning('WhatsApp getChatMessages API fallback failed: ' . $e->getMessage());
-            }
         }
 
         return [

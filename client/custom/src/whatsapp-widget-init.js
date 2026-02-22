@@ -28,7 +28,7 @@
 
     var config = {
         enabled: true,
-        pollInterval: 3000,
+        pollInterval: 1000,
         statusCheckInterval: 5000
     };
 
