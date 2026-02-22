@@ -1,5 +1,6 @@
 {
   "categories": {
+    "WhatsApp": {},
     "whatsapp.message": {
       "paramList": ["chatId"],
       "accessCheckCommand": "WhatsAppAccessCheck --userId=:userId --chatId=:chatId"

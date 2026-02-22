@@ -458,6 +458,9 @@
                         console.log('WA Widget: ✓ WAMP connection established');
                         state.subscribed = true;
 
+                        // Start polling alongside WebSocket as a backup
+                        startMessagePolling();
+
                         // Subscribe to WhatsApp topic
                         state.wampConnection.subscribe('WhatsApp', function(topic, event) {
                             var data = event;
