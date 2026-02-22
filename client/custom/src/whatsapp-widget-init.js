@@ -379,6 +379,21 @@
             }
         }).catch(function (e) {
             console.error('WhatsApp Widget: Status check error', e);
+            state.status = 'disconnected';
+            config.enabled = true; // Still show widget even if API check fails
+
+            var btn = _$('whatsapp-floating-btn');
+            if (btn) btn.style.display = 'flex';
+            
+            updateStatusUI();
+            
+            if (state.screen !== 'login') {
+                 showScreen('login');
+            }
+            if (state.chatInterval) {
+                clearInterval(state.chatInterval);
+                state.chatInterval = null;
+            }
         });
     }
 
@@ -414,55 +429,81 @@
     function subscribeToRealTime() {
         if (state.subscribed) return;
 
-        // Use EspoCRM WebSocket (WAMP protocol)
-        if (typeof App !== 'undefined' && App.webSocketManager && App.webSocketManager.isEnabled()) {
+        console.log('WA Widget: Connecting to WAMP server');
+        if (typeof ab !== 'undefined') {
             try {
-                // Subscribe to global WhatsApp topic for new chats
-                var globalTopic = 'whatsapp.message';
-                
-                App.webSocketManager.subscribe(globalTopic, function(data) {
-                    if (typeof data === 'string') {
-                        try { data = JSON.parse(data); } catch(e) { return; }
+                var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                var port = window.location.port ? ':' + window.location.port : '';
+                if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
+                    port = ':8443'; // Default ddev wss port for EspoCRM
+                }
+                var authToken = '';
+                var match = document.cookie.match(new RegExp('(^| )auth-token=([^;]+)'));
+                if (match) authToken = match[2];
+                else {
+                    var lsAuth = localStorage.getItem('espo-user-auth');
+                    if (lsAuth) {
+                        try {
+                            var decoded = JSON.parse(atob(lsAuth));
+                            authToken = decoded.token;
+                        } catch(e) {}
                     }
-                    
-                    console.log('WA WebSocket received on ' + globalTopic + ':', data);
-                    
-                    // If we have a chat open, check if this is for the current chat
-                    if (state.screen === 'chat' && state.chatId && data.chatId === state.chatId) {
-                        if (data.action === 'message') {
-                            onRealTimeMessage(data.data, 'message');
-                        } else if (data.action === 'message_ack') {
-                            onRealTimeMessage(data.data, 'message_ack');
+                }
+                var userId = localStorage.getItem('espo-user-lastUserId') || 'system';
+
+                var url = protocol + '//' + window.location.hostname + port + '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
+                state.wampConnection = new ab.Session(url,
+                    // onOpen
+                    function() {
+                        console.log('WA Widget: ✓ WAMP connection established');
+                        state.subscribed = true;
+
+                        // Subscribe to WhatsApp topic
+                        state.wampConnection.subscribe('WhatsApp', function(topic, event) {
+                            var data = event;
+                            if (typeof data === 'string') {
+                                try { data = JSON.parse(data); } catch(e) { return; }
+                            }
+                            
+                            console.log('WA WebSocket received on ' + topic + ':', data);
+                            
+                            // If we have a chat open, check if this is for the current chat
+                            if (state.screen === 'chat' && state.chatId && data.chatId === state.chatId) {
+                                if (data.action === 'message') {
+                                    onRealTimeMessage(data.data, 'message');
+                                } else if (data.action === 'message_ack') {
+                                    onRealTimeMessage(data.data, 'message_ack');
+                                }
+                            } else {
+                                // Update chat list if a new message comes in
+                                if (state.isOpen) {
+                                    loadChats();
+                                }
+                            }
+                        });
+                        state.wsRetryCount = 0;
+                    },
+                    // onClose
+                    function(code, reason) {
+                        console.warn('WA Widget: WAMP connection closed', reason);
+                        state.subscribed = false;
+                        if (!state.wsRetryCount) state.wsRetryCount = 0;
+                        if (state.wsRetryCount < 5) {
+                            state.wsRetryCount++;
+                            setTimeout(subscribeToRealTime, 5000);
                         }
-                    } else {
-                        // Update chat list
-                        if (state.isOpen) {
-                            loadChats();
-                        }
-                    }
-                });
-                
-                state.subscribed = true;
-                state.wsRetryCount = 0;
-                console.log('WA Widget: Subscribed to WebSocket topic: ' + globalTopic);
+                    },
+                    { 'skipSubprotocolCheck': true }
+                );
                 return;
             } catch(e) {
-                console.warn('WA Widget: WebSocket subscribe failed, retrying...', e);
+                console.warn('WA Widget: WAMP subscribe failed, retrying...', e);
             }
         }
 
         // Fallback: poll if WebSocket not available
         console.warn('WA Widget: WebSocket not available, falling back to polling');
         startMessagePolling();
-
-        // Retry WebSocket connection
-        if (!state.wsRetryCount) state.wsRetryCount = 0;
-        if (state.wsRetryCount < 5) {
-            state.wsRetryCount++;
-            setTimeout(function() {
-                if (!state.subscribed) subscribeToRealTime();
-            }, 5000);
-        }
     }
 
     function startMessagePolling() {
@@ -901,8 +942,9 @@
         if (q) {
              q = q.toLowerCase();
              chats = chats.filter(function(c) {
-                 var n = (c.name || c.contact.pushname || '').toLowerCase();
-                 return n.indexOf(q) !== -1;
+                 var n = (c.name || (c.contact && c.contact.pushname) || '');
+                 if (typeof n !== 'string') n = String(n);
+                 return n.toLowerCase().indexOf(q) !== -1;
              });
         }
         
@@ -940,8 +982,9 @@
         if (q) {
              q = q.toLowerCase();
              contacts = contacts.filter(function(c) {
-                 var n = (c.name || c.pushname || c.number || '').toLowerCase();
-                 return n.indexOf(q) !== -1;
+                 var n = (c.name || c.pushname || c.number || '');
+                 if (typeof n !== 'string') n = String(n);
+                 return n.toLowerCase().indexOf(q) !== -1;
              });
         }
 
@@ -1268,6 +1311,58 @@
         root.innerHTML = panelHtml;
         document.body.appendChild(root);
         initAvatarObserver();
+        
+        // --- Inject Resizers ---
+        var resizers = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+        resizers.forEach(function(dir) {
+            var el = document.createElement('div');
+            el.className = 'wa-resizer ' + dir;
+            root.appendChild(el); 
+            
+            el.addEventListener('mousedown', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                root.classList.add('wa-resizing'); 
+                
+                var startX = e.clientX, startY = e.clientY;
+                var rect = root.getBoundingClientRect();
+                var startW = rect.width, startH = rect.height;
+                var styles = window.getComputedStyle(root);
+                var startRight = parseFloat(styles.right); 
+                var startBottom = parseFloat(styles.bottom); 
+                
+                function onMove(e) {
+                    var dx = e.clientX - startX;
+                    var dy = e.clientY - startY;
+                    
+                    if (dir.indexOf('w') !== -1) {
+                        root.style.width = Math.max(300, startW - dx) + 'px';
+                    }
+                    if (dir.indexOf('e') !== -1) {
+                         var newW = Math.max(300, startW + dx);
+                         root.style.width = newW + 'px';
+                         if (!isNaN(startRight)) root.style.right = (startRight - (newW - startW)) + 'px';
+                    }
+                    
+                    if (dir.indexOf('n') !== -1) {
+                        root.style.height = Math.max(400, startH - dy) + 'px';
+                    }
+                    if (dir.indexOf('s') !== -1) {
+                        var newH = Math.max(400, startH + dy);
+                        root.style.height = newH + 'px';
+                        if (!isNaN(startBottom)) root.style.bottom = (startBottom - (newH - startH)) + 'px';
+                    }
+                }
+                function onUp() {
+                    root.classList.remove('wa-resizing');
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                }
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+        });
+        // --- End Inject Resizers ---
+
         makeDraggable();
 
         var closeBtn = _$('wa-close-btn');
@@ -1275,6 +1370,9 @@
 
         var backBtn = _$('wa-back-btn');
         if (backBtn) backBtn.onclick = function() { showScreen('chatList'); };
+
+        var newChatBtn = _$('wa-btn-new-chat');
+        if (newChatBtn) newChatBtn.onclick = function() { loadContacts(); };
 
         var searchInput = _$('wa-search-input');
         if (searchInput) searchInput.oninput = function() { renderChatList(state.chats); };
@@ -1303,6 +1401,12 @@
     /* ── Initialization ────────────────────────────────────────── */
     function init() {
         if (state.initialized) return;
+        
+        // EspoCRM loads its core JS asynchronously. We must wait until Ajax and the base path are ready.
+        if (typeof Espo === 'undefined' || !Espo.Ajax || !document.body) {
+            setTimeout(init, 500); 
+            return;
+        }
         state.initialized = true;
 
         buildButton();
@@ -1314,9 +1418,9 @@
 
     // Auto-init when document ready or on demand
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 1000); });
     } else {
-        init();
+        setTimeout(init, 1000);
     }
 
     // Export for manual control
