@@ -135,7 +135,11 @@
 6. Pusher.php: onPublish() → рассылает подписчикам
 ```
 
-**Текущий статус**: WebSocket возвращает **502 Bad Gateway** потому что nginx в DDEV не проксирует `/wss` на порт 8443 к WAMP серверу. Polling работает как надёжный fallback.
+**Текущий статус**: WebSocket **работает полностью**.
+
+- Nginx проксирует `/wss` на `127.0.0.1:8443`
+- WAMP сервер успешно авторизует токены
+- Broadcast сообщения через `WebSocketService` мгновенно доставляются в виджет.
 
 ---
 
@@ -350,30 +354,18 @@ EspoCRM проверяет топики через `isTopicAllowed()` в `Pusher
 
 ### 5.4 Текущие проблемы WebSocket
 
-| Проблема                    | Причина                                                                  | Статус            |
-| --------------------------- | ------------------------------------------------------------------------ | ----------------- |
-| **502 Bad Gateway**         | Nginx не проксирует `/wss` к WAMP серверу                                | ❌ Не исправлено  |
-| **Несовместимость топиков** | Backend: `whatsapp.message.{chatId}`, Frontend: `WhatsApp`               | ❌ Не исправлено  |
-| **Sender vs Submission**    | `WebSocketService` использует `Sender`, может потребоваться `Submission` | ⚠️ Нужна проверка |
+| Проблема                    | Причина                            | Статус                                                |
+| --------------------------- | ---------------------------------- | ----------------------------------------------------- |
+| **502 Bad Gateway**         | Nginx не проксирует `/wss`         | ✅ Исправлено (добавлен `.ddev/nginx/websocket.conf`) |
+| **AuthTokenCheck error**    | Frontend отправлял `userId=system` | ✅ Исправлено (используется `espo-user-lastUserId`)   |
+| **Sender vs Submission**    | Сервис отправки ломался            | ✅ Исправлено (переписали на `Submission`)            |
+| **Несовместимость топиков** | Разные топики в JS и PHP           | ✅ Исправлено (единый топик `WhatsApp`)               |
 
-### 5.5 Как починить WebSocket (план)
+### 5.5 Как починить WebSocket (ИСТОРИЯ ФИКСА)
 
-1. **Nginx**: Добавить в DDEV конфиг проксирование WebSocket:
-
-   ```nginx
-   location /wss {
-       proxy_pass http://localhost:8080;
-       proxy_http_version 1.1;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "Upgrade";
-   }
-   ```
-
-2. **Топик**: Обеспечить что `WebSocketService` и frontend используют одинаковый топик. Варианты:
-   - Frontend подписывается на `WhatsApp`, backend публикует в `WhatsApp`
-   - Или использовать `whatsapp.message.*` с wildcard
-
-3. **WebSocketService**: Проверить, нужно ли использовать `Submission` вместо `Sender` (зависит от версии EspoCRM).
+1. **Nginx**: Добавлен `.ddev/nginx/websocket.conf` для проксирования `/wss` на внутренний порт.
+2. **Топик**: `WebSocketService` и frontend используют единый `WhatsApp`.
+3. **WebSocketService**: Использован `Submission::submit()` вместо устаревшего `Sender::send()`.
 
 ---
 
