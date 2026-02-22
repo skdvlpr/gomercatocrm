@@ -103,13 +103,13 @@ class WhatsAppClient
         return $response['contacts'] ?? $response['data'] ?? (is_array($response) && !isset($response['success']) ? $response : []);
     }
 
-    public function sendMessage(string $chatId, string $message): bool
+    public function sendMessage(string $chatId, string $message): array
     {
         if (strpos($chatId, '@') === false) {
             $cleanPhone = preg_replace('/[^0-9]/', '', $chatId);
             if (empty($cleanPhone)) {
                 $this->log->warning("WhatsAppClient: Empty phone/chatId provided.");
-                return false;
+                return ['success' => false];
             }
             $chatId = $cleanPhone . '@c.us';
         }
@@ -121,7 +121,7 @@ class WhatsAppClient
         ];
 
         $response = $this->makeRequest('POST', "/client/sendMessage/{$this->sessionId}", $data);
-        return $response['success'] ?? false;
+        return $response;
     }
 
     public function terminateSession(): bool

@@ -431,71 +431,191 @@
     function subscribeToRealTime() {
         if (state.subscribed) return;
 
-        var topic = '/WhatsApp';
-        var callback = function(payload) {
-            if (payload && payload.action === 'message') {
-                onRealTimeMessage(payload.data);
-            }
-        };
-
-        // Try App.fayeClient first (most common in authenticated Espo)
-        if (typeof App !== 'undefined' && App.fayeClient) {
-            App.fayeClient.subscribe(topic, callback);
-            state.subscribed = true;
-            return;
-        }
-
-        // Try getting from loader
-        if (typeof Espo !== 'undefined' && Espo.loader) {
-            // Check if faye is already loaded or available
-            // Espo.loader.has might not exist in all versions, use safely
-            var hasFaye = (Espo.loader.has && Espo.loader.has('faye')) || (Espo.loader.cache && Espo.loader.cache['faye']);
-            
-            if (hasFaye || !state.subscribed) {
-                if (Espo.loader.load) {
-                     Espo.loader.load('faye').then(function(faye) {
-                        faye.subscribe(topic, callback);
-                        state.subscribed = true;
-                     });
-                } else if (Espo.loader.get) {
-                     Espo.loader.get('faye').then(function(faye) {
-                        faye.subscribe(topic, callback);
-                        state.subscribed = true;
-                     });
-                }
+        // EspoCRM uses AutobahnJS/WAMP WebSocket via App.webSocketManager
+        if (typeof App !== 'undefined' && App.webSocketManager && App.webSocketManager.isEnabled()) {
+            try {
+                App.webSocketManager.subscribe('WhatsApp', function(topicUri, event) {
+                    // WAMP sends (topicUri, event) where event is the published data
+                    var payload = event;
+                    if (typeof payload === 'string') {
+                        try { payload = JSON.parse(payload); } catch(e) { return; }
+                    }
+                    if (payload && (payload.action === 'message' || payload.action === 'message_ack')) {
+                        onRealTimeMessage(payload.data, payload.action);
+                    }
+                });
+                state.subscribed = true;
+                console.log('WA Widget: Subscribed to WebSocket topic WhatsApp');
                 return;
+            } catch(e) {
+                console.warn('WA Widget: WebSocket subscribe failed, falling back to polling', e);
             }
         }
-        
-        // Retry if dependencies not loaded, but don't loop forever
-        setTimeout(function() {
-             if (!state.subscribed && ((typeof App !== 'undefined' && App.fayeClient) || (typeof Espo !== 'undefined' && Espo.loader))) {
-                 subscribeToRealTime();
-             }
-        }, 3000);
+
+        // Fallback: poll for new messages every 5s
+        if (!state.messagePollingActive) {
+            startMessagePolling();
+        }
+
+        // Retry WebSocket after some time
+        if (!state.wsRetryCount) state.wsRetryCount = 0;
+        if (state.wsRetryCount < 5) {
+            state.wsRetryCount++;
+            setTimeout(function() {
+                if (!state.subscribed) subscribeToRealTime();
+            }, 5000);
+        }
     }
 
-    function onRealTimeMessage(msg) {
+    function startMessagePolling() {
+        if (state.messagePollingActive) return;
+        state.messagePollingActive = true;
+        console.log('WA Widget: Starting message polling (direct API)');
+
+        state.messagePollInterval = setInterval(function() {
+            if (!state.isOpen) return;
+
+            // Poll currently open chat directly from WhatsApp API
+            if (state.screen === 'chat' && state.chatId) {
+                api('GET', 'WhatsApp/action/getChatMessages', {
+                    chatId: state.chatId,
+                    limit: 50
+                }).then(function(r) {
+                    var apiMsgs = r.list || [];
+                    if (apiMsgs.length === 0) return;
+
+                    var changed = false;
+                    apiMsgs.forEach(function(msg) {
+                        var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
+                        if (!id) return;
+                        var found = false;
+                        for (var i = 0; i < state.messages.length; i++) {
+                            var existId = (state.messages[i].id && state.messages[i].id._serialized) || state.messages[i].id || state.messages[i].messageId || state.messages[i].tempId;
+                            if (existId === id) {
+                                found = true;
+                                // Update ack/status if changed
+                                if (msg.ack !== undefined && state.messages[i].ack !== msg.ack) {
+                                    state.messages[i].ack = msg.ack;
+                                    changed = true;
+                                }
+                                // Replace optimistic messages
+                                if (state.messages[i]._optimistic) {
+                                    state.messages[i] = msg;
+                                    changed = true;
+                                }
+                                break;
+                            }
+                            // Match optimistic by body
+                            if (state.messages[i]._optimistic && state.messages[i].body === msg.body && state.messages[i].fromMe && msg.fromMe) {
+                                state.messages[i] = msg;
+                                found = true;
+                                changed = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            state.messages.push(msg);
+                            changed = true;
+                        }
+                    });
+
+                    if (changed) {
+                        renderMessages(state.messages);
+                    }
+                }).catch(function() {});
+            }
+
+            // Also refresh chat list periodically
+            if (state.screen === 'chatList') {
+                loadChats();
+            }
+        }, 5000);
+    }
+
+    function stopMessagePolling() {
+        if (state.messagePollInterval) {
+            clearInterval(state.messagePollInterval);
+            state.messagePollInterval = null;
+        }
+        state.messagePollingActive = false;
+    }
+
+    function onRealTimeMessage(msg, action) {
         if (!msg) return;
+        action = action || 'message';
 
         // 1. Append to Chat View if open
         if (state.screen === 'chat' && state.chatId === msg.chatId) {
-            // Avoid duplicates
-            var exists = false; // Simple check?
-            // In a real app, we check IDs. Here we trust the stream or check last message.
-            // Let's just append and let the renderer handle or fetch fresh.
-            // Better: Append to state and render.
-            state.messages.push(msg);
-            renderMessages(state.messages);
-            // Scroll to bottom
-            var container = _$('wa-messages-container');
-            if (container) container.scrollTop = container.scrollHeight;
+            var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
+            var isDuplicate = false;
+
+            if (action === 'message_ack') {
+                // Just update status of existing message
+                for (var i = 0; i < state.messages.length; i++) {
+                    var existing = state.messages[i];
+                    var existingId = (existing.id && existing.id._serialized) || existing.id || existing.messageId || existing.tempId;
+                    if (existingId === id) {
+                        state.messages[i].ack = msg.ack;
+                        if (msg.status) state.messages[i].status = msg.status;
+                        break;
+                    }
+                }
+                renderMessages(state.messages);
+            } else {
+                // Check if message already exists
+                for (var i = 0; i < state.messages.length; i++) {
+                    var existing = state.messages[i];
+                    var existingId = (existing.id && existing.id._serialized) || existing.id || existing.messageId || existing.tempId;
+
+                    if (existingId === id) {
+                        isDuplicate = true;
+                        state.messages[i] = msg; // Update with latest data
+                        break;
+                    }
+
+                    // Check for optimistic match to replace it
+                    if (existing._optimistic && existing.body === msg.body && existing.fromMe && msg.fromMe) {
+                        // Replace optimistic with real message
+                        state.messages[i] = msg;
+                        isDuplicate = true; // We don't want to push a new one
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    state.messages.push(msg);
+                }
+                
+                renderMessages(state.messages);
+            }
         }
 
-        // 2. Refresh Chat List (to show unread, bubble up)
-        // We only do this if the panel is open to save resources
+        // 2. Refresh Chat List/State locally to save network & re-sort
         if (state.isOpen) {
-            loadChats(); 
+            var chatFound = false;
+            for (var j = 0; j < state.chats.length; j++) {
+                var cId = state.chats[j].id._serialized || state.chats[j].id;
+                if (cId === msg.chatId) {
+                    chatFound = true;
+                    if (action === 'message') {
+                        state.chats[j].lastMessage = msg;
+                    } else if (action === 'message_ack' && state.chats[j].lastMessage) {
+                        var lmId = state.chats[j].lastMessage.id && state.chats[j].lastMessage.id._serialized || state.chats[j].lastMessage.id;
+                        var msgId = msg.id && msg.id._serialized || msg.id;
+                        if (lmId === msgId) {
+                            state.chats[j].lastMessage.ack = msg.ack;
+                            if (msg.status) state.chats[j].lastMessage.status = msg.status;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (!chatFound && action === 'message') {
+                loadChats(); // New chat, need to fetch from API
+            } else if (state.screen === 'chatList') {
+                renderChatList(state.chats); // Re-render to sort and show updates
+            }
         }
     }
 
@@ -608,6 +728,7 @@
     function openChat(chatId, chatName) {
         state.chatId = chatId;
         state.chatName = chatName;
+        state.messages = []; // Clear old messages immediately to prevent duplication/flashing
         showScreen('chat');
 
         var container = _$('wa-messages-container');
@@ -654,17 +775,33 @@
             
             apiMessages.forEach(function(msg) {
                 var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
+                if (!id) return;
                 merged[id] = msg;
             });
             
             dbMessages.forEach(function(msg) {
                 var id = msg.messageId;
+                if (!id) return;
                 if (!merged[id]) {
+                     // DB-only message — ensure it has proper status mapping
+                     if (msg.status && !msg.ack) {
+                         var st = msg.status.toLowerCase();
+                         if (st === 'read' || st === 'played') msg.ack = 3;
+                         else if (st === 'delivered') msg.ack = 2;
+                         else if (st === 'sent' || st === 'received') msg.ack = 1;
+                     }
                      merged[id] = msg;
+                } else {
+                    // API has this message too — preserve DB status if API has no ack
+                    if (merged[id].ack === undefined && msg.status) {
+                        var st = msg.status.toLowerCase();
+                        if (st === 'read' || st === 'played') merged[id].ack = 3;
+                        else if (st === 'delivered') merged[id].ack = 2;
+                        else if (st === 'sent' || st === 'received') merged[id].ack = 1;
+                    }
                 }
             });
             
-            var result = Object.values(merged);
             var result = Object.values(merged);
             result.sort(function(a, b) {
                 return normalizeTimestamp(a.timestamp) - normalizeTimestamp(b.timestamp);
@@ -740,16 +877,48 @@
         if (!text || !state.chatId) return;
         input.value = '';
 
-        var container = _$('wa-messages-container');
         var now = new Date();
-        var msgEl = document.createElement('div');
-        msgEl.className = 'wa-message outgoing';
-        msgEl.innerHTML = '<div class="wa-message-text">' + esc(text) + '</div>' +
-            '<div class="wa-message-time">' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' \u23f3</div>';
-        if (container) { container.appendChild(msgEl); container.scrollTop = container.scrollHeight; }
+        var tempId = 'temp-' + Date.now();
+        var optimisticMsg = {
+            id: tempId,
+            tempId: tempId,
+            body: text,
+            timestamp: Math.floor(now.getTime() / 1000),
+            fromMe: true,
+            _optimistic: true
+        };
 
-        api('POST', 'WhatsApp/action/sendMessage', { chatId: state.chatId, message: text }).then(function () {
-             // Success
+        state.messages.push(optimisticMsg);
+        renderMessages(state.messages);
+
+        api('POST', 'WhatsApp/action/sendMessage', { chatId: state.chatId, message: text }).then(function (r) {
+             // Success: update the tempId with real ID if provided
+             if (r && r.messageId) {
+                 for (var i = 0; i < state.messages.length; i++) {
+                     if (state.messages[i].tempId === tempId) {
+                         state.messages[i].id = r.messageId;
+                         state.messages[i]._optimistic = false;
+                         // If WebSocket didn't give us a real ack yet, simulate SENT to remove hourglass
+                         if (!state.messages[i].ack && state.messages[i].ack !== 0) {
+                             state.messages[i].ack = 1; 
+                             state.messages[i].status = 'Sent';
+                         }
+                         renderMessages(state.messages);
+                         break;
+                     }
+                 }
+             }
+        }).catch(function(e) {
+            // Handle send error: show error mark
+            for (var i = 0; i < state.messages.length; i++) {
+                if (state.messages[i].tempId === tempId) {
+                    state.messages[i].body += ' \u26A0\uFE0F (Error)';
+                    state.messages[i].ack = -1; // Negative ack for error
+                    state.messages[i]._optimistic = false;
+                    renderMessages(state.messages);
+                    break;
+                }
+            }
         });
     }
 
@@ -767,6 +936,13 @@
                  return n.indexOf(q) !== -1;
              });
         }
+        
+        // Sort by timestamp (newest first)
+        chats.sort(function(a, b) {
+            var tA = (a.lastMessage && a.lastMessage.timestamp) ? normalizeTimestamp(a.lastMessage.timestamp) : 0;
+            var tB = (b.lastMessage && b.lastMessage.timestamp) ? normalizeTimestamp(b.lastMessage.timestamp) : 0;
+            return tB - tA;
+        });
 
         el.innerHTML = chats.map(function (c) {
             var chatId = c.id._serialized || c.id;
@@ -860,9 +1036,39 @@
             var ms = normalizeTimestamp(m.timestamp);
             var d = new Date(ms);
             var t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            var icon = '';
+            
+            if (m.fromMe) {
+                if (m._optimistic) {
+                    icon = ' \u23f3'; // Hourglass for pending optimistic only
+                } else {
+                    var ack = m.ack;
+                    var st = m.status ? m.status.toLowerCase() : '';
+                    
+                    // Map DB status to ack if ack is missing
+                    if (ack === undefined || ack === null) {
+                        if (st === 'read' || st === 'played') ack = 3;
+                        else if (st === 'delivered') ack = 2;
+                        else if (st === 'sent' || st === 'received') ack = 1;
+                    }
+                    
+                    if (ack >= 3 || st === 'read' || st === 'played') {
+                        icon = ' <span style="color:#53bdeb; letter-spacing:-2px;">\u2713\u2713</span>'; 
+                    } else if (ack >= 2 || st === 'delivered') {
+                        icon = ' <span style="letter-spacing:-2px; opacity:0.6;">\u2713\u2713</span>';
+                    } else if (ack >= 1 || st === 'sent') {
+                        icon = ' <span style="opacity:0.6;">\u2713</span>';
+                    } else if (ack === 0) {
+                        icon = ' <span style="opacity:0.6;">\u2713</span>'; // Server received = single check
+                    } else {
+                        icon = ' <span style="opacity:0.6;">\u2713</span>'; // Default to sent check, not hourglass
+                    }
+                }
+            }
+
             html += '<div class="wa-message ' + (m.fromMe ? 'outgoing' : 'incoming') + '">' +
                 '<div class="wa-message-text">' + esc(m.body || '') + '</div>' +
-                '<div class="wa-message-time">' + esc(t) + '</div></div>';
+                '<div class="wa-message-time">' + esc(t) + icon + '</div></div>';
         });
         container.innerHTML = html;
         container.scrollTop = container.scrollHeight;
@@ -967,7 +1173,9 @@
                 // But resize changes dimensions.
                 
                 // Let's switch to left/top positioning once dragged?
-            } catch(e) {}
+            } catch(e) {
+                console.error('Failed to restore panel position:', e);
+            }
         }
         
         header.style.cursor = 'move';
@@ -1208,13 +1416,10 @@
         var refBtn = _$('wa-refresh-qr'); if(refBtn) refBtn.onclick = function() { startSession(); };
         var backBtn = _$('wa-back-btn'); 
         if(backBtn) {
-        var backBtn = _$('wa-back-btn'); 
-        if(backBtn) {
             backBtn.onclick = function() { 
                 // Always go back to chatList from sub-screens
                 showScreen('chatList'); 
             };
-        }
         }
         var sendBtn = _$('wa-send-btn'); if(sendBtn) sendBtn.onclick = sendMessage;
         var msgInput = _$('wa-message-input'); if(msgInput) msgInput.onkeypress = function(e) { if (e.key === 'Enter') sendMessage(); };
@@ -1259,9 +1464,6 @@
         // Ensure updateTheme check immediately
         setTimeout(updateTheme, 0);
         
-        makeDraggable(); 
-        
-        // Init Draggable
         makeDraggable();
     }
 

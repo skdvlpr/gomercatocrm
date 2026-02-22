@@ -18,3 +18,7 @@
 
 # Implementation plans from other AI models
 /impls
+
+# Test files
+test_*.php
+test_*.json

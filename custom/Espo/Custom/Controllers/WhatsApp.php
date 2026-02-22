@@ -169,40 +169,71 @@ class WhatsApp extends Base
         }
 
         // 1. Send via API
-        $sent = $this->getWhatsAppClient()->sendMessage($phone, $message);
+        $result = $this->getWhatsAppClient()->sendMessage($phone, $message);
+        $sent = $result['success'] ?? false;
+
+        $messageId = null;
+        if (isset($result['message']) && isset($result['message']['id'])) {
+            // Handle different wwebjs ID structures
+            $msgIdObj = $result['message']['id'];
+            $messageId = is_array($msgIdObj) ? ($msgIdObj['_serialized'] ?? null) : $msgIdObj;
+        } else if (isset($result['data']) && isset($result['data']['id'])) {
+            $msgIdObj = $result['data']['id'];
+            $messageId = is_array($msgIdObj) ? ($msgIdObj['_serialized'] ?? null) : $msgIdObj;
+        }
 
         // 2. Save to DB
         if ($sent) {
             $entityManager = $this->getContainer()->get('entityManager');
-            $msgEntity = $entityManager->getEntity('WhatsAppMessage');
-            $msgEntity->set([
-                'body' => $message,
-                'chatId' => $phone,
-                'fromMe' => true,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'status' => 'Sent',
-                'messageId' => uniqid('sent_')
-            ]);
-            $entityManager->saveEntity($msgEntity);
+            $realId = $messageId ?: uniqid('sent_');
 
-            // 3. Publish via WebSocket
-            try {
-                if ($this->getContainer()->has(WebSocketSubmission::class)) {
-                    /** @var WebSocketSubmission $ws */
-                    $ws = $this->getContainer()->get(WebSocketSubmission::class);
-                    $ws->submit('WhatsApp', null, [
-                        'action' => 'message',
-                        'data' => $msgEntity->toArray()
+            // Protect against race condition with webhook
+            $exists = $entityManager->getRepository('WhatsAppMessage')->where(['messageId' => $realId])->findOne();
+
+            if (!$exists) {
+                try {
+                    $msgEntity = $entityManager->getEntity('WhatsAppMessage');
+                    $msgEntity->set([
+                        'body' => $message,
+                        'chatId' => $phone,
+                        'fromMe' => true,
+                        'timestamp' => date('Y-m-d H:i:s'),
+                        'status' => 'Sent',
+                        'messageId' => $realId
                     ]);
+                    $entityManager->saveEntity($msgEntity);
+
+                    // 3. Publish via WebSocket
+                    try {
+                        if ($this->getContainer()->has(WebSocketSubmission::class)) {
+                            /** @var WebSocketSubmission $ws */
+                            $ws = $this->getContainer()->get(WebSocketSubmission::class);
+                            $ws->submit('WhatsApp', null, [
+                                'action' => 'message',
+                                'data' => $msgEntity->toArray()
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        // Ignore WebSocket errors to prevent blocking message sending
+                        $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
+                    }
+                } catch (\PDOException $e) {
+                    if ($e->getCode() != 23000 && strpos($e->getMessage(), '1062') === false) {
+                        throw $e;
+                    }
+                    // If it is 23000 / 1062, it means webhook already saved it, so we can safely ignore
                 }
-            } catch (\Throwable $e) {
-                // Ignore WebSocket errors to prevent blocking message sending
-                $GLOBALS['log']->error('WhatsApp WebSocket Error: ' . $e->getMessage());
             }
+
+            return [
+                'success' => true,
+                'messageId' => $realId
+            ];
         }
 
         return [
-            'success' => $sent
+            'success' => false,
+            'error' => $result['error'] ?? 'Unknown error'
         ];
     }
 
@@ -245,8 +276,8 @@ class WhatsApp extends Base
 
         if ($payload) {
             $body = $payload->body ?? '';
-            $from = $payload->from ?? '';
-            $to = $payload->to ?? '';
+            $from = is_object($payload->from ?? null) ? ($payload->from->_serialized ?? '') : ($payload->from ?? '');
+            $to = is_object($payload->to ?? null) ? ($payload->to->_serialized ?? '') : ($payload->to ?? '');
             $timestamp = $payload->timestamp ?? time();
 
             if ($body === 'status@broadcast')
@@ -273,7 +304,14 @@ class WhatsApp extends Base
                 'status' => 'Received',
                 'messageId' => $msgId ?: uniqid('recv_')
             ]);
-            $entityManager->saveEntity($msgEntity);
+            try {
+                $entityManager->saveEntity($msgEntity);
+            } catch (\PDOException $e) {
+                if ($e->getCode() != 23000 && strpos($e->getMessage(), '1062') === false) {
+                    throw $e;
+                }
+                // Duplicate entry from race condition: already saved, continue to broadcast!
+            }
 
             // Publish via WebSocket
             try {
