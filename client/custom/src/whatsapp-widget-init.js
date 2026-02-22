@@ -523,63 +523,73 @@
     }
 
     function startMessagePolling() {
-        if (state.messagePollingActive) return;
+        // Always restart: clear any old interval first
+        if (state.messagePollInterval) {
+            clearInterval(state.messagePollInterval);
+            state.messagePollInterval = null;
+        }
         state.messagePollingActive = true;
-        console.log('WA Widget: Starting message polling (fallback)');
+        console.log('WA Widget: Starting message polling every ' + config.pollInterval + 'ms');
 
-        state.messagePollInterval = setInterval(function() {
-            if (!state.isOpen) return;
+        // Poll immediately on start (don't wait for first interval)
+        pollMessages();
 
-            if (state.screen === 'chat' && state.chatId) {
-                api('GET', 'WhatsApp/action/getChatMessages', {
-                    chatId: state.chatId,
-                    limit: 50
-                }).then(function(r) {
-                    var apiMsgs = r.list || [];
-                    if (apiMsgs.length === 0) return;
+        state.messagePollInterval = setInterval(pollMessages, config.pollInterval);
+    }
 
-                    var changed = false;
-                    apiMsgs.forEach(function(msg) {
-                        var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
-                        if (!id) return;
-                        var found = false;
-                        for (var i = 0; i < state.messages.length; i++) {
-                            var existId = (state.messages[i].id && state.messages[i].id._serialized) || state.messages[i].id || state.messages[i].messageId || state.messages[i].tempId;
-                            if (existId === id) {
-                                found = true;
-                                if (msg.ack !== undefined && state.messages[i].ack !== msg.ack) {
-                                    state.messages[i].ack = msg.ack;
-                                    changed = true;
-                                }
-                                if (state.messages[i]._optimistic) {
-                                    state.messages[i] = msg;
-                                    changed = true;
-                                }
-                                break;
-                            }
-                            if (state.messages[i]._optimistic && state.messages[i].body === msg.body && state.messages[i].fromMe && msg.fromMe) {
-                                state.messages[i] = msg;
-                                found = true;
+    function pollMessages() {
+        if (state.screen === 'chat' && state.chatId) {
+            api('GET', 'WhatsApp/action/getChatMessages', {
+                chatId: state.chatId,
+                limit: 50
+            }).then(function(r) {
+                var apiMsgs = r.list || [];
+                if (apiMsgs.length === 0) return;
+
+                var changed = false;
+                apiMsgs.forEach(function(msg) {
+                    var id = (msg.id && msg.id._serialized) || msg.id || msg.messageId;
+                    if (!id) return;
+                    var found = false;
+                    for (var i = 0; i < state.messages.length; i++) {
+                        var existId = (state.messages[i].id && state.messages[i].id._serialized) || state.messages[i].id || state.messages[i].messageId || state.messages[i].tempId;
+                        if (existId === id) {
+                            found = true;
+                            if (msg.ack !== undefined && state.messages[i].ack !== msg.ack) {
+                                state.messages[i].ack = msg.ack;
                                 changed = true;
-                                break;
                             }
+                            if (state.messages[i]._optimistic) {
+                                state.messages[i] = msg;
+                                changed = true;
+                            }
+                            break;
                         }
-                        if (!found) {
-                            state.messages.push(msg);
+                        if (state.messages[i]._optimistic && state.messages[i].body === msg.body && state.messages[i].fromMe && msg.fromMe) {
+                            state.messages[i] = msg;
+                            found = true;
                             changed = true;
+                            break;
                         }
-                    });
-
-                    if (changed) {
-                        renderMessages(state.messages);
                     }
-                }).catch(function() {});
-            }
+                    if (!found) {
+                        state.messages.push(msg);
+                        changed = true;
+                    }
+                });
 
-            if (state.screen === 'chatList') {
-                loadChats();
-            }
-        }, config.pollInterval);
+                if (changed) {
+                    console.log('WA Widget: New messages detected, rendering');
+                    renderMessages(state.messages);
+                }
+            }).catch(function(err) {
+                console.warn('WA Widget: Poll error', err);
+            });
+        }
+
+        if (state.screen === 'chatList') {
+            loadChats();
+        }
     }
 
     function stopMessagePolling() {
@@ -790,6 +800,9 @@
         }).catch(function () {
             fallbackToLastMessage(chatId);
         });
+
+        // Start polling for new messages every second
+        startMessagePolling();
     }
 
     function mergeMessages(apiMessages, chatId) {
