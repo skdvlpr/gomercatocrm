@@ -10,10 +10,10 @@ EspoCRM customized for GoMercato.
 2. **Clone and start**:
    ```bash
    git clone <repo-url>
-   cd gomercatocrm
+   cd gmcrm
    ddev start
    ```
-3. **Open**: https://gomercatocrm.ddev.site
+3. **Open**: https://gmcrm.ddev.site
 4. **Database connection** (for install wizard):
    - Host: `db`
    - Database: `db`

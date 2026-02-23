@@ -28,7 +28,7 @@
                 "description": "leadCapture"
             },
             {
-                "url": "#Admin/integrations/name=CsvLeadImport",
+                "url": "#CsvLeadImport",
                 "label": "Import Leads from CSV",
                 "iconClass": "fas fa-file-csv",
                 "description": "Configure CSV Import Settings"
