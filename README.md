@@ -49,56 +49,63 @@ This section details the custom WhatsApp widget integration, including its archi
 
 ### 🏗 Architecture Overview
 
-The integration consists of a standalone frontend widget and a backend API controller.
+The integration relies on a robust real-time architecture utilizing WhatsApp Web.js (WAHA), ZeroMQ, and WebSockets (WAMP via Ratchet).
 
-1.  **Frontend**: A pure JavaScript widget (`whatsapp-widget-init.js`) injected globally via EspoCRM metadata. It handles UI rendering, state management (chats, messages, contacts), and long-polling for real-time updates.
-2.  **Backend**: A custom controller (`WhatsApp.php`) that acts as a bridge between the frontend and the WhatsApp service (e.g., via `wwebjs-api` or similar).
+1.  **DDEV Services**:
+    - `web`: The main PHP-FPM container running EspoCRM.
+    - `daemon`: A dedicated container running the EspoCRM WebSocket daemon (`websocket.php`) and background jobs.
+    - `wwebjs-api`: A dedicated Node.js container running the WhatsApp HTTP API (WAHA).
+2.  **Message Flow (Incoming)**:
+    - WAHA receives a message from WhatsApp servers.
+    - WAHA sends an HTTP POST Webhook to `WhatsApp/action/webhook`.
+    - EspoCRM saves the message to the database.
+    - EspoCRM pushes the event via ZeroMQ (`tcp://127.0.0.1:5555`) to the WebSocket Daemon.
+    - The Ratchet Daemon broadcasts the message via WebSocket (WAMP) to all subscribed frontend clients.
+3.  **Frontend Widget**: A pure JavaScript widget (`whatsapp-widget-init.js`) injected globally. It maintains a persistent WebSocket connection for zero-latency updates, with an intelligent HTTP polling fallback if the socket drops.
 
 ### 🧩 Components Breakdown
 
 #### 1. Frontend Widget (`client/custom/src/whatsapp-widget-init.js`)
 
-This is the core of the client-side logic. It does not use EspoCRM's standard View/Model system to ensure it floats independently of the main application router.
+This is the core of the client-side logic. It floats independently of the main application router.
 
-- **Initialization**: Injected automatically on page load. It builds a floating action button (`#whatsapp-floating-btn`).
-- **State Management**: Maintains local state for `isOpen`, `chatId`, `chats` list, and `messages`.
-- **Polling & lazy loading**:
-  - **Status Loop**: Checks `WhatsApp/action/status` every 5-30 seconds to update connectivity icons (Red/Green dot).
-  - **Chat Loop**: When open, polls `WhatsApp/action/getChats` to keep the list updated.
-  - **Avatars**: Uses `IntersectionObserver` to lazily load contact profile pictures only when they scroll into view, preventing network resource exhaustion.
-- **UI Layers**:
-  - **Login Screen**: Displays QR code for authentication.
-  - **Chat List**: Searchable list of active conversations.
-  - **Contact List**: Searchable, deduplicated list of all phonebook contacts for starting new chats.
-  - **Chat View**: Message history, Emoji Picker, and input area.
-- **Key features**:
-  - **Draggable & Snapping**: The widget panel can be dragged around the screen and magnetically snaps to window edges.
-  - **Cache Busting**: Uses timestamps to force CSS/JS updates.
-  - **Autocomplete Disabled**: Forces `autocomplete="off"` on all inputs to prevent browser interference.
-  - **Scroll Management**: Manages `overflow-y` for smooth list scrolling.
+- **Real-Time Engine**:
+  - Establishes a WAMP WebSocket connection (`/wss` -> `auth-token`).
+  - Subscribes to the `WhatsApp` topic to receive instant messages and read-receipts (`message_ack`).
+  - **Fallback Polling**: If WebSocket fails, it intelligently falls back to HTTP polling (`action/getChatMessages`) every second.
+- **DOM Memoization**: Uses string-hashing HTML caching during renders to prevent DOM thrashing and text-selection loss during high-frequency updates.
+- **Lazy Loading**: Uses `IntersectionObserver` to load contact Profile Pictures only when scrolled into view.
+- **UI Layers**: Login (QR code), Chat List, Contact List, and active Chat View (with Emoji Picker).
 
 #### 2. Backend Controller (`custom/Espo/Custom/Controllers/WhatsApp.php`)
 
-Handles all API requests from the widget.
+Handles HTTP requests from the widget and incoming webhooks from WAHA.
 
 - **Endpoints**:
-  - `actionStatus`: Returns `{ enabled: bool, status: string, isConnected: bool }`.
-  - `actionLogin`: Initiates the Puppeteer/WhatsApp session.
-  - `actionQrCode`: Returns the QR code image data (base64).
-  - `actionGetChats`: Returns a list of recent chats with last messages.
-  - `actionGetContacts`: Returns a deduplicated list of phonebook contacts.
-  - `actionGetProfilePic`: Proxies profile picture downloads from WhatsApp CDN to local cache (`client/custom/whatsapp-avatars/`) to bypass CORS and expiration issues.
-  - `actionGetChatMessages`: Returns message history for a specific `chatId`.
-  - `actionSendMessage`: Sends a text message to a `chatId`.
-  - `actionLogout`: Destroys the current session.
+  - `actionWebhook`: High-performance ingestion endpoint for WAHA webhooks. Triggers ZeroMQ broadcasts.
+  - `actionStatus` / `actionLogin` / `actionLogout`: Manages the WAHA session lifecycle.
+  - `actionQrCode`: Fetches the live QR code from WAHA.
+  - `actionSendMessage`: Sends text out via WAHA and returns optimistic message IDs.
+  - `actionGetProfilePic`: Proxies profile picture downloads from WhatsApp CDN to local cache (`client/custom/whatsapp-avatars/`) to fix CORS/expiration issues.
 
-#### 3. Metadata Injection (`custom/Espo/Custom/Resources/metadata/app/client.json`)
+#### 3. WebSocket Configuration
 
-Registers the script to be loaded globally.
+Real-time functionality requires specific infrastructure configurations:
+
+- **Nginx Proxy**: `.ddev/nginx/websocket.conf` intercepts traffic to `/wss` and proxies it to the Ratchet daemon on `127.0.0.1:8443`.
+- **Topic Whitelist**: The `WhatsApp` WAMP topic is explicitly whitelisted in `custom/Espo/Custom/Resources/metadata/app/webSocket.json`.
+- **ZeroMQ**: Used internally by EspoCRM `WebSocketService` to bridge standard HTTP FPM requests to the persistent Ratchet PHP daemon.
+
+#### 4. Metadata Injection (`custom/Espo/Custom/Resources/metadata/app/client.json`)
+
+Registers the script to be loaded globally across all EspoCRM pages.
 
 ```json
 {
-  "scriptList": ["__APPEND__", "client/custom/src/whatsapp-widget-init.js"]
+  "scriptList": [
+    "__APPEND__",
+    "client/custom/src/whatsapp-widget-init.js?v=2028.11"
+  ]
 }
 ```
 
