@@ -86,7 +86,7 @@
 4. PHP Controller: WhatsAppClient::sendMessage() → WAHA API
 5. WAHA: POST /client/sendMessage/{sessionId} → WhatsApp серверы
 6. PHP Controller: сохраняет сообщение в WhatsAppMessage entity (БД)
-7. PHP Controller: WebSocketService::broadcastMessage() (если WS работает)
+7. PHP Controller: WebSocketService::broadcastMessage() (доставка через WebSocket)
 8. Response → JS: обновляет optimistic сообщение реальными данными
 ```
 
@@ -366,6 +366,18 @@ EspoCRM проверяет топики через `isTopicAllowed()` в `Pusher
 1. **Nginx**: Добавлен `.ddev/nginx/websocket.conf` для проксирования `/wss` на внутренний порт.
 2. **Топик**: `WebSocketService` и frontend используют единый `WhatsApp`.
 3. **WebSocketService**: Использован `Submission::submit()` вместо устаревшего `Sender::send()`.
+
+### 5.6 Как проверить, что WebSocket работает
+
+Чтобы лично убедиться, что сообщения прилетают через вебсокеты, а не через ежесекундный поллинг:
+
+1. Открой CRM в браузере и нажми F12, чтобы открыть **Developer Tools**.
+2. Перейди во вкладку **Network** (Сеть) и выбери фильтр **WS** (WebSockets).
+3. Обнови страницу (F5) и открой виджет WhatsApp.
+4. В списке появится соединение `wss` (Status 101 Switching Protocols). Кликни на него.
+5. Перейди во вкладку **Messages** (сообщения соединения).
+6. **Тест**: Отправь сообщение с телефона на свой подключенный номер.
+7. Ты мгновенно увидишь входящий JSON пакет со своим сообщением во вкладке `Messages` в браузере, и оно тут же отрисуется в виджете.
 
 ---
 
