@@ -304,6 +304,10 @@
     function showScreen(name) {
         state.lastScreen = state.screen;
         state.screen = name;
+        
+        // Clear caches so the new screen is forced to render completely
+        state.lastChatListHtml = null;
+        state.lastContactsHtml = null;
 
         var screens = document.querySelectorAll('#wa-panel .wa-screen');
         for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
@@ -783,6 +787,7 @@
         state.chatId = chatId;
         state.chatName = chatName;
         state.messages = [];
+        state.lastMessagesHtml = null; // Clear cache for new chat
         showScreen('chat');
 
         var container = _$('wa-messages-container');
@@ -988,7 +993,7 @@
             return tB - tA;
         });
 
-        el.innerHTML = chats.map(function (c) {
+        var html = chats.map(function (c) {
             var chatId = c.id._serialized || c.id;
             var name = c.name || extractPhoneNumber(chatId);
             var last = (c.lastMessage && c.lastMessage.body) || '';
@@ -1001,6 +1006,10 @@
                 '<div class="wa-chat-meta"><div class="wa-chat-time">' + esc(time) + '</div></div>' +
                 '</li>';
         }).join('');
+
+        if (state.lastChatListHtml === html) return;
+        state.lastChatListHtml = html;
+        el.innerHTML = html;
 
         var items = el.querySelectorAll('.wa-chat-item');
         for (var i = 0; i < items.length; i++) {
@@ -1029,7 +1038,7 @@
             return;
         }
         
-        el.innerHTML = contacts.map(function(c) {
+        var html = contacts.map(function(c) {
              var name = c.name || c.pushname || c.number;
              var id = (c.id && c.id._serialized) || c.id;
              var isGroup = id && id.indexOf('@g.us') !== -1;
@@ -1042,6 +1051,10 @@
                     '<div class="wa-contact-info"><div class="wa-contact-name">' + esc(name) + '</div>' +
                     numberHtml + '</div></li>';
         }).join('');
+        
+        if (state.lastContactsHtml === html) return;
+        state.lastContactsHtml = html;
+        el.innerHTML = html;
         
         var items = el.querySelectorAll('.wa-contact-item');
         for (var i = 0; i < items.length; i++) {
@@ -1111,6 +1124,10 @@
                 '<div class="wa-message-text">' + esc(m.body || '') + '</div>' +
                 '<div class="wa-message-time">' + esc(t) + icon + '</div></div>';
         });
+
+        if (state.lastMessagesHtml === html) return;
+        state.lastMessagesHtml = html;
+        
         container.innerHTML = html;
         container.scrollTop = container.scrollHeight;
     }
