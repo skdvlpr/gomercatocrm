@@ -1,0 +1,3 @@
+crm.rdas.site {
+    reverse_proxy ddev-gmcrm-web:80
+}
