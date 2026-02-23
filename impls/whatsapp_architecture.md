@@ -336,16 +336,13 @@ EspoCRM проверяет топики через `isTopicAllowed()` в `Pusher
 - Стандартные: `newNotification`, `popupNotifications.event`, `recordUpdate.*`, `appParamsUpdate`
 
 > [!NOTE]
-> Для WhatsApp топика нужно создать файл:
+> Для WhatsApp топика нужно создать файл по строго определённому пути:
 > `custom/Espo/Custom/Resources/metadata/app/webSocket.json`
 >
 > ```json
 > {
 >   "categories": {
->     "WhatsApp": {
->       "paramList": [],
->       "accessCheckCommand": ""
->     }
+>     "WhatsApp": {}
 >   }
 > }
 > ```
