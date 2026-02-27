@@ -79,5 +79,21 @@
       "action": "webhook"
     },
     "noAuth": true
+  },
+  {
+    "route": "/CsvLeadImport/:id/runImport",
+    "method": "post",
+    "params": {
+      "controller": "CsvLeadImport",
+      "action": "runImport"
+    }
+  },
+  {
+    "route": "/CsvLeadImport/:id/resetCounter",
+    "method": "post",
+    "params": {
+      "controller": "CsvLeadImport",
+      "action": "resetCounter"
+    }
   }
 ]
