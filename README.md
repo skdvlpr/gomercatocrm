@@ -6,20 +6,43 @@ EspoCRM customized for GoMercato.
 
 ## Quick Start
 
-1. **Install DDEV**: https://ddev.com/get-started/
-2. **Clone and start**:
-   ```bash
-   git clone <repo-url>
-   cd gmcrm
-   ddev start
-   ```
-3. **Open**: https://gmcrm.ddev.site
-4. **Database connection** (for install wizard):
-   - Host: `db`
-   - Database: `db`
-   - User: `db`
-   - Password: `db`
-5. **After Installation**: Run `ddev restart` to setup automatic jobs.
+1.  **Install DDEV**: https://ddev.com/get-started/
+2.  **Clone and start**:
+    ```bash
+    git clone <repo-url>
+    cd gmcrm
+    ddev start
+    ```
+3.  **Open**: https://gmcrm.ddev.site
+4.  **Database connection** (for install wizard):
+    - Host: `db`
+    - Database: `db`
+    - User: `db`
+    - Password: `db`
+5.  **After Installation**: Run `ddev restart` to setup automatic jobs.
+
+## 🌍 Environment Management
+
+This project uses a custom DDEV command to switch between **Local** and **Dev VPS** configurations (URLs, internal secrets, etc.).
+
+### How to Switch Environments
+
+1.  **Local Development** (to use `https://gmcrm.ddev.site`):
+    ```bash
+    ddev env local
+    ddev restart
+    ```
+2.  **Dev VPS** (to use `https://crm.gomercato.it`):
+    ```bash
+    ddev env dev
+    ddev restart
+    ```
+
+### How it Works
+
+The `ddev env` command copies the templates from `environments/<env>/` to the active locations (`data/config-internal.php` and `.ddev/docker-compose.active-caddy.yaml`). These active files are ignored by Git to avoid conflicts between teammates.
+
+---
 
 ## 📱 WhatsApp Integration Guide
 
