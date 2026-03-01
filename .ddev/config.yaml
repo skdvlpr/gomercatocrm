@@ -18,7 +18,7 @@ hooks:
     - exec: |
         if [ -f /var/www/html/data/config.php ] && grep -q "database" /var/www/html/data/config.php; then
           echo 'EspoCRM is installed, running maintenance...'
-          php /var/www/html/clear_cache.php || echo 'Cache clear failed '
+          php /var/www/html/command.php clear-cache || echo 'Cache clear failed '
           php /var/www/html/bin/command ensureScheduledJobs && echo 'Scheduled jobs configured!' || echo 'Scheduled jobs setup skipped'
         else
         echo 'Set permissions to avoid errors...'
@@ -247,11 +247,11 @@ webimage_extra_packages: [php8.3-zmq]
 # The default time that DDEV waits for all containers to become ready can be increased from
 # the default 120. This helps in importing huge databases, for example.
 
-web_extra_exposed_ports:
-  - name: websocket
-    container_port: 8443
-    http_port: 8080
-    https_port: 8443
+# web_extra_exposed_ports:
+#   - name: websocket
+#     container_port: 8443
+#     http_port: 8080
+#     https_port: 8443
 
 web_extra_daemons:
   - name: "espo-websocket"

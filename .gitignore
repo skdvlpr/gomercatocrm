@@ -22,3 +22,7 @@
 # Test files
 test_*.php
 test_*.json
+
+# DDEV Environment Swapping
+.ddev/docker-compose.active-*
+

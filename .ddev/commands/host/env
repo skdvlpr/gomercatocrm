@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## Description: Switch environment configurations (local/dev)
+## Usage: env [local|dev]
+## Example: ddev env dev
+
+ENV_NAME=$1
+
+if [ -z "$ENV_NAME" ]; then
+    echo "Usage: ddev env [local|dev]"
+    exit 1
+fi
+
+ENV_DIR="${DDEV_APPROOT}/environments/${ENV_NAME}"
+
+if [ ! -d "$ENV_DIR" ]; then
+    echo "Error: Environment '${ENV_NAME}' does not exist in environments/"
+    exit 1
+fi
+
+echo "Switching to environment: ${ENV_NAME}..."
+
+# 1. Copy config-internal.php
+if [ -f "${ENV_DIR}/config-internal.php" ]; then
+    echo "Updating data/config-internal.php..."
+    cp "${ENV_DIR}/config-internal.php" "${DDEV_APPROOT}/data/config-internal.php"
+fi
+
+# 2. Setup DDEV extra docker-compose active files
+echo "Cleaning up old active docker configurations..."
+rm -f "${DDEV_APPROOT}/.ddev/docker-compose.active-"*
+
+if [ -f "${ENV_DIR}/docker-compose.caddy.yaml" ]; then
+    echo "Activating Caddy configuration..."
+    cp "${ENV_DIR}/docker-compose.caddy.yaml" "${DDEV_APPROOT}/.ddev/docker-compose.active-caddy.yaml"
+fi
+
+echo ""
+echo "Environment switched to ${ENV_NAME}."
+echo "Please run 'ddev restart' for changes to apply properly."
