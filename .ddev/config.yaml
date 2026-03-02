@@ -249,9 +249,9 @@ webimage_extra_packages: [php8.3-zmq]
 
 web_extra_exposed_ports:
   - name: websocket
-    container_port: 8443
+    container_port: 8080
     http_port: 8080
-    https_port: 8443
+    https_port: 8444
 
 web_extra_daemons:
   - name: "espo-websocket"
