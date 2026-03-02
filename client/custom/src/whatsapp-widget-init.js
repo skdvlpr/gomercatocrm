@@ -384,16 +384,14 @@
         }).catch(function (e) {
             console.error('WhatsApp Widget: Status check error', e);
             state.status = 'disconnected';
-            config.enabled = true; // Still show widget even if API check fails
+            config.enabled = false; // Disable widget if API check fails
 
             var btn = _$('whatsapp-floating-btn');
-            if (btn) btn.style.display = 'flex';
+            if (btn) btn.style.display = 'none';
             
             updateStatusUI();
+            if (state.isOpen) close();
             
-            if (state.screen !== 'login') {
-                 showScreen('login');
-            }
             if (state.chatInterval) {
                 clearInterval(state.chatInterval);
                 state.chatInterval = null;
@@ -430,105 +428,92 @@
     }
 
     /* ── WebSocket Real-Time Subscription ───────────────────────── */
+    /* ── WebSocket Real-Time Subscription ───────────────────────── */
     function subscribeToRealTime() {
         if (state.subscribed) return;
 
-        console.log('WA Widget: Connecting to WAMP server');
-        if (typeof ab !== 'undefined') {
-            try {
-                var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                var port = window.location.port ? ':' + window.location.port : '';
-                if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
-                    port = ''; // Use standard port, rely on /wss proxy
+        // Start polling as a primary/fallback mechanism
+        startMessagePolling();
+
+        if (typeof ab === 'undefined' || !ab.Session) {
+            console.warn('WA Widget: ab.Session not found. Relying on polling.');
+            return;
+        }
+        
+        var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var portStr = window.location.port;
+        var port = portStr ? ':' + portStr : '';
+        
+        var userId = 'system';
+        var espoUserLastUserId = localStorage.getItem('espo-user-lastUserId');
+        if (espoUserLastUserId) {
+            try { userId = JSON.parse(espoUserLastUserId); } 
+            catch(e) { userId = espoUserLastUserId; }
+        }
+
+        var authToken = '';
+        var match = document.cookie.match(new RegExp('(^| )auth-token=([^;]+)'));
+        if (match) authToken = match[2];
+        else {
+            var lsAuth = localStorage.getItem('espo-user-auth');
+            if (lsAuth) {
+                if (lsAuth.charAt(0) === '"') {
+                    try { lsAuth = JSON.parse(lsAuth); } catch(e) {}
                 }
-                var authToken = '';
-                var match = document.cookie.match(new RegExp('(^| )auth-token=([^;]+)'));
-                if (match) authToken = match[2];
-                else {
-                    var lsAuth = localStorage.getItem('espo-user-auth');
-                    if (lsAuth) {
-                        try {
-                            var decoded = JSON.parse(atob(lsAuth));
-                            authToken = decoded.token;
-                        } catch(e) {}
-                    }
-                }
-                var userId = 'system';
                 try {
-                    var lsUserId = localStorage.getItem('espo-user-lastUserId');
-                    if (lsUserId) {
-                        userId = lsUserId;
+                    var decoded = atob(lsAuth);
+                    var parts = decoded.split(':');
+                    if (parts.length > 1) {
+                        authToken = parts[1]; // EspoCRM v8 format: base64(username:token)
                     } else {
-                        var espoUserStr = localStorage.getItem('espo-user');
-                        if (espoUserStr) {
-                            var espoUser = JSON.parse(espoUserStr);
-                            if (espoUser.user && espoUser.user.id) {
-                                userId = espoUser.user.id;
-                            }
-                        }
+                        var jsonObj = JSON.parse(decoded); // Older legacy format
+                        authToken = jsonObj.token;
                     }
-                } catch(e) {}
-
-                var url = protocol + '//' + window.location.hostname + port;
-                if (protocol === 'wss:') {
-                    url += '/wss';
+                } catch(e) {
+                    console.warn('WA Widget: Failed to decode authToken', e);
                 }
-                url += '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
-                state.wampConnection = new ab.Session(url,
-                    // onOpen
-                    function() {
-                        console.log('WA Widget: ✓ WAMP connection established');
-                        state.subscribed = true;
-
-                        // Start polling alongside WebSocket as a backup
-                        startMessagePolling();
-
-                        // Subscribe to WhatsApp topic
-                        state.wampConnection.subscribe('WhatsApp', function(topic, event) {
-                            var data = event;
-                            if (typeof data === 'string') {
-                                try { data = JSON.parse(data); } catch(e) { return; }
-                            }
-                            
-                            console.log('WA WebSocket received on ' + topic + ':', data);
-                            
-                            // If we have a chat open, check if this is for the current chat
-                            if (state.screen === 'chat' && state.chatId && data.chatId === state.chatId) {
-                                if (data.action === 'message') {
-                                    onRealTimeMessage(data.data, 'message');
-                                } else if (data.action === 'message_ack') {
-                                    onRealTimeMessage(data.data, 'message_ack');
-                                }
-                            } else {
-                                // Update chat list if a new message comes in
-                                if (state.isOpen) {
-                                    loadChats();
-                                }
-                            }
-                        });
-                        state.wsRetryCount = 0;
-                    },
-                    // onClose
-                    function(code, reason) {
-                        console.warn('WA Widget: WAMP connection closed', reason);
-                        state.subscribed = false;
-                        if (!state.wsRetryCount) state.wsRetryCount = 0;
-                        if (state.wsRetryCount < 5) {
-                            state.wsRetryCount++;
-                            setTimeout(subscribeToRealTime, 5000);
-                        }
-                    },
-                    { 'skipSubprotocolCheck': true }
-                );
-                return;
-            } catch(e) {
-                console.warn('WA Widget: WAMP subscribe failed, retrying...', e);
             }
         }
 
-        // Fallback: poll if WebSocket not available
-        console.warn('WA Widget: WebSocket not available, falling back to polling');
-        startMessagePolling();
+        if (!authToken) {
+            console.warn('WA Widget: No authToken found for WS!');
+            return;
+        }
+
+        var url = protocol + '//' + window.location.hostname + port;
+        if (protocol === 'wss:') {
+            url += '/wss';
+        }
+        url += '?authToken=' + encodeURIComponent(authToken) + '&userId=' + encodeURIComponent(userId);
+
+        try {
+            state.connection = new ab.Session(url, function() {
+                state.subscribed = true;
+                state.connection.subscribe('WhatsApp', function(topic, data) {
+                    if (typeof data === 'string') {
+                        try { data = JSON.parse(data); } catch(e) { return; }
+                    }
+                    var action = data.action;
+                    var payload = data.data || data;
+                    var chatId = data.chatId || payload.chatId;
+
+                    if (state.screen === 'chat' && state.chatId && chatId === state.chatId) {
+                        if (action === 'message') {
+                            onRealTimeMessage(payload, 'message');
+                        } else if (action === 'message_ack') {
+                            onRealTimeMessage(payload, 'message_ack');
+                        }
+                    } else {
+                        if (state.isOpen) loadChats();
+                    }
+                });
+            }, function(code, reason) {
+                state.subscribed = false;
+                // Rely on polling...
+            });
+        } catch(e) {
+            console.warn('WA Widget: Exception starting WAMP session', e);
+        }
     }
 
     function startMessagePolling() {
@@ -538,7 +523,6 @@
             state.messagePollInterval = null;
         }
         state.messagePollingActive = true;
-        console.log('WA Widget: Starting message polling every ' + config.pollInterval + 'ms');
 
         // Poll immediately on start (don't wait for first interval)
         pollMessages();
@@ -583,16 +567,21 @@
                     }
                     if (!found) {
                         state.messages.push(msg);
-                        changed = true;
+                        changed = true; // If a new message is added, it's a change
                     }
-                });
+                }); // End of forEach
 
                 if (changed) {
-                    console.log('WA Widget: New messages detected, rendering');
+                    // Force chronological order for safety
+                    state.messages.sort(function(a, b) {
+                        var ta = a.timestamp;
+                        var tb = b.timestamp;
+                        return (parseInt(ta) || 0) - (parseInt(tb) || 0);
+                    });
                     renderMessages(state.messages);
                 }
-            }).catch(function(err) {
-                console.warn('WA Widget: Poll error', err);
+            }).catch(function(e) {
+                console.warn('WA Widget: Message polling failed', e);
             });
         }
 
