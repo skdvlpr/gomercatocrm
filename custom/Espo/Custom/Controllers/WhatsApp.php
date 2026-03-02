@@ -144,7 +144,7 @@ class WhatsApp extends Base
         // Step 2: Always read final result from DB (now has API + webhook messages merged)
         $collection = $entityManager->getRepository('WhatsAppMessage')
             ->where(['chatId' => $chatId])
-            ->order('timestamp', 'ASC')
+            ->order('timestamp', 'DESC')
             ->limit($limit)
             ->find();
 
@@ -162,6 +162,8 @@ class WhatsApp extends Base
                 'status' => $msg->get('status') ?? 'Received',
             ];
         }
+
+        $result = array_reverse($result);
 
         return [
             'success' => true,
@@ -189,12 +191,12 @@ class WhatsApp extends Base
         // Check local cache first to avoid hammering the API/CDN
         $filename = 'wa-avatar-' . md5($id) . '.jpg';
         $path = 'client/custom/whatsapp-avatars/' . $filename;
-        $fullPath = rtrim($this->getContainer()->get('config')->get('siteUrl'), '/') . '/' . $path;
+        $relativeUrl = '/' . $path;
 
         if (file_exists($path)) {
             // Cache valid for 7 days
             if (time() - filemtime($path) < 604800) {
-                return ['url' => $fullPath . '?v=' . filemtime($path)];
+                return ['url' => $relativeUrl . '?v=' . filemtime($path)];
             }
         }
 
@@ -218,7 +220,7 @@ class WhatsApp extends Base
                     mkdir(dirname($path), 0755, true);
                 }
                 file_put_contents($path, $imageData);
-                return ['url' => $fullPath . '?v=' . time()];
+                return ['url' => $relativeUrl . '?v=' . time()];
             }
         }
 

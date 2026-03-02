@@ -178,7 +178,11 @@ class WhatsAppClient
         }
 
         if ($httpCode !== 200) {
-            $this->log->error('WhatsAppClient API error', ['code' => $httpCode, 'response' => $response]);
+            // Suppress 404 for wwebjs-api endpoints that might be deprecated/missing
+            if ($httpCode === 404 && (strpos($url, 'getChatMessages') !== false || strpos($url, 'downloadAndReadMessages') !== false)) {
+                return ['success' => false, 'code' => $httpCode];
+            }
+            $this->log->error('WhatsAppClient API error fetching ' . $url, ['code' => $httpCode, 'response' => $response]);
             return ['success' => false, 'code' => $httpCode];
         }
 
