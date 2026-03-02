@@ -384,16 +384,14 @@
         }).catch(function (e) {
             console.error('WhatsApp Widget: Status check error', e);
             state.status = 'disconnected';
-            config.enabled = true; // Still show widget even if API check fails
+            config.enabled = false; // Disable widget if API check fails
 
             var btn = _$('whatsapp-floating-btn');
-            if (btn) btn.style.display = 'flex';
+            if (btn) btn.style.display = 'none';
             
             updateStatusUI();
+            if (state.isOpen) close();
             
-            if (state.screen !== 'login') {
-                 showScreen('login');
-            }
             if (state.chatInterval) {
                 clearInterval(state.chatInterval);
                 state.chatInterval = null;
