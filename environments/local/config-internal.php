@@ -21,7 +21,7 @@ return [
         'sqlFailed' => false
     ],
     'restrictedMode' => false,
-    'siteUrl' => 'https://gmcrm.ddev.site',
+    'siteUrl' => 'https://royalacademy-crm.ddev.site',
     'cleanupAppLog' => true,
     'cleanupAppLogPeriod' => '30 days',
     'webSocketMessager' => 'ZeroMQ',

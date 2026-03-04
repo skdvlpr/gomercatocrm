@@ -10,10 +10,10 @@ EspoCRM customized for GoMercato.
 2.  **Clone and start**:
     ```bash
     git clone <repo-url>
-    cd gmcrm
+    cd royalacademy-crm
     ddev start
     ```
-3.  **Open**: https://gmcrm.ddev.site
+3.  **Open**: https://royalacademy-crm.ddev.site
 4.  **Database connection** (for install wizard):
     - Host: `db`
     - Database: `db`
@@ -27,7 +27,7 @@ This project uses a custom DDEV command to switch between **Local** and **Dev VP
 
 ### How to Switch Environments
 
-1.  **Local Development** (to use `https://gmcrm.ddev.site`):
+1.  **Local Development** (to use `https://royalacademy-crm.ddev.site`):
     ```bash
     ddev env local
     ddev restart
