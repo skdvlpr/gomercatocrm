@@ -1,0 +1,23 @@
+services:
+  minio:
+    image: pgsty/minio:latest
+    container_name: ddev-${DDEV_SITENAME}-minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - HTTP_EXPOSE=9000:9000
+      - HTTPS_EXPOSE=9001:9001
+      - VIRTUAL_HOST=${DDEV_HOSTNAME}
+    command: server /data --console-address ":9001"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: https://$\{DDEV_HOSTNAME\}
+    expose:
+      - "9000"
+      - "9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  minio_data:
