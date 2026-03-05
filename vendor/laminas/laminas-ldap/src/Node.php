@@ -79,6 +79,7 @@ class Node extends Node\AbstractNode implements Iterator, RecursiveIterator
     /**
      * Constructor is protected to enforce the use of factory methods.
      *
+     * @param  array   $data
      * @param  bool $fromDataSource
      * @throws Exception\LdapException
      */
@@ -218,6 +219,7 @@ class Node extends Node\AbstractNode implements Iterator, RecursiveIterator
     }
 
     /**
+     * @param  array   $data
      * @param  bool $fromDataSource
      * @throws Exception\LdapException
      */
@@ -238,6 +240,7 @@ class Node extends Node\AbstractNode implements Iterator, RecursiveIterator
      * Factory method to create a new detached Laminas\Ldap\Node for a given DN.
      *
      * @param  string|array|Dn $dn
+     * @param  array           $objectClass
      * @return Node
      * @throws Exception\LdapException
      */
@@ -283,6 +286,7 @@ class Node extends Node\AbstractNode implements Iterator, RecursiveIterator
     /**
      * Factory method to create a detached Laminas\Ldap\Node from array data.
      *
+     * @param  array   $data
      * @param  bool $fromDataSource
      * @return Node
      * @throws Exception\LdapException

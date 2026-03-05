@@ -41,6 +41,7 @@ class Attribute
     /**
      * Sets a LDAP attribute.
      *
+     * @param  array                     $data
      * @param  string                    $attribName
      * @param string|array|Traversable $value
      * @param  bool                   $append
@@ -77,6 +78,7 @@ class Attribute
     /**
      * Gets a LDAP attribute.
      *
+     * @param  array   $data
      * @param  string  $attribName
      * @param  int $index
      * @return array|mixed
@@ -109,6 +111,7 @@ class Attribute
     /**
      * Checks if the given value(s) exist in the attribute
      *
+     * @param array       $data
      * @param string      $attribName
      * @param mixed|array $value
      * @return bool
@@ -137,6 +140,7 @@ class Attribute
     /**
      * Removes duplicate values from a LDAP attribute
      *
+     * @param array  $data
      * @param string $attribName
      * @return void
      */
@@ -152,6 +156,7 @@ class Attribute
     /**
      * Remove given values from a LDAP attribute
      *
+     * @param array       $data
      * @param string      $attribName
      * @param mixed|array $value
      * @return void
@@ -216,6 +221,7 @@ class Attribute
     /**
      * Sets a LDAP password.
      *
+     * @param array  $data
      * @param string $password
      * @param string $hashType   Optional by default MD5
      * @param string $attribName Optional
@@ -292,6 +298,7 @@ class Attribute
     /**
      * Sets a LDAP date/time attribute.
      *
+     * @param  array                      $data
      * @param  string                     $attribName
      * @param int|array|Traversable $value
      * @param  bool                    $utc
@@ -338,6 +345,7 @@ class Attribute
     /**
      * Gets a LDAP date/time attribute.
      *
+     * @param  array   $data
      * @param  string  $attribName
      * @param  int $index
      * @return array|int
