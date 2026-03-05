@@ -25,6 +25,7 @@ abstract class AbstractLogicalFilter extends AbstractFilter
     /**
      * Creates a new grouping filter.
      *
+     * @param array  $subfilters
      * @param string $symbol
      * @throws Exception\FilterException
      */

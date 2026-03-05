@@ -85,9 +85,9 @@ class InitialAvatar
         $driver = $this->getDriver();
 
         $driverInstance = match ($driver) {
-            'gd'      => new GdDriver(),
+            'gd' => new GdDriver(),
             'imagick' => new ImagickDriver(),
-            default   => throw new RuntimeException('Unsupported driver.'),
+            default => throw new RuntimeException("Unsupported driver."),
         };
 
         $this->image = new ImageManager($driverInstance);
@@ -714,7 +714,7 @@ class InitialAvatar
                 x: $width / 2,
                 y: $height / 2,
                 init: function (CircleFactory $circle) use ($width, $bgColor) {
-                    $circle->radius($width - 2);
+                    $circle->radius($width -2);
                     $circle->background($bgColor);
                 }
             );
@@ -778,6 +778,7 @@ class InitialAvatar
 
         return $image;
     }
+
 
     /**
      * @return string|null

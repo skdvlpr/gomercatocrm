@@ -253,6 +253,8 @@ class OpenLdap extends Node\Schema
 
     /**
      * Resolves inheritance in objectClasses and attributes
+     *
+     * @param array        $repository
      */
     protected function resolveInheritance(AbstractItem $node, array $repository)
     {
@@ -393,6 +395,8 @@ class OpenLdap extends Node\Schema
 
     /**
      * Ensures that a name element is present and that it is single-values.
+     *
+     * @param array $data
      */
     protected function ensureNameAttribute(array &$data)
     {
@@ -413,6 +417,8 @@ class OpenLdap extends Node\Schema
     /**
      * Parse the given tokens into a data structure
      *
+     * @param  array $data
+     * @param  array $tokens
      * @return void
      */
     protected function parseLdapSchemaSyntax(array &$data, array $tokens)

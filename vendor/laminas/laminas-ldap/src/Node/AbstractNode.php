@@ -68,6 +68,7 @@ abstract class AbstractNode implements ArrayAccess, Countable
     /**
      * Constructor is protected to enforce the use of factory methods.
      *
+     * @param  array         $data
      * @param  bool       $fromDataSource
      */
     protected function __construct(Ldap\Dn $dn, array $data, $fromDataSource)
@@ -77,6 +78,7 @@ abstract class AbstractNode implements ArrayAccess, Countable
     }
 
     /**
+     * @param array   $data
      * @param  bool $fromDataSource
      */
     protected function loadData(array $data, $fromDataSource)
