@@ -1,0 +1,5 @@
+{
+ "minioService": {
+ "className": "Espo\\Custom\\Services\\MinioService"
+ }
+}
