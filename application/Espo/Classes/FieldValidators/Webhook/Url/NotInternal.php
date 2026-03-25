@@ -27,40 +27,45 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Classes\RecordHooks\CurrencyRecordRate;
+namespace Espo\Classes\FieldValidators\Webhook\Url;
 
-use Espo\Core\Exceptions\Conflict;
-use Espo\Core\Record\DeleteParams;
-use Espo\Core\Record\Hook\DeleteHook;
-use Espo\Core\Utils\Currency\DatabasePopulator;
-use Espo\Core\WebSocket\Submission;
-use Espo\Entities\CurrencyRecordRate;
+use Espo\Core\FieldValidation\Validator;
+use Espo\Core\FieldValidation\Validator\Data;
+use Espo\Core\FieldValidation\Validator\Failure;
+use Espo\Core\Utils\Security\UrlCheck;
+use Espo\Core\Webhook\AddressUtil;
 use Espo\ORM\Entity;
-use Espo\Tools\Currency\Exceptions\NotEnabled;
-use Espo\Tools\Currency\SyncManager;
 
 /**
- * @implements DeleteHook<CurrencyRecordRate>
+ * @implements Validator<Entity>
  */
-class AfterDelete implements DeleteHook
+class NotInternal implements Validator
 {
     public function __construct(
-        private SyncManager $syncManager,
-        private Submission $submission,
-        private DatabasePopulator $databasePopulator,
+        private UrlCheck $urlCheck,
+        private AddressUtil $addressUtil,
     ) {}
 
-    public function process(Entity $entity, DeleteParams $params): void
+    public function validate(Entity $entity, string $field, Data $data): ?Failure
     {
-        $code = $entity->getRecord()->getCode();
+        $value = $entity->get($field);
 
-        try {
-            $this->syncManager->updateCode($code);
-        } catch (NotEnabled $e) {
-            throw new Conflict($e->getMessage(), previous: $e);
+        if (!$value) {
+            return null;
         }
 
-        $this->databasePopulator->process();
-        $this->submission->submit('appParamsUpdate');
+        if (!$this->urlCheck->isUrl($value)) {
+            return null;
+        }
+
+        if ($this->addressUtil->isAllowedUrl($value)) {
+            return null;
+        }
+
+        if (!$this->urlCheck->isUrlAndNotIternal($value)) {
+            return Failure::create();
+        }
+
+        return null;
     }
 }

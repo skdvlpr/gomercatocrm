@@ -153,7 +153,7 @@ class Image implements EntryPoint
         $response
             ->setHeader('Content-Disposition', 'inline;filename="' . $fileName . '"')
             ->setHeader('Content-Length', (string) $fileSize)
-            ->setHeader('Content-Security-Policy', "default-src 'self'");
+            ->setHeader('Content-Security-Policy', "default-src 'self'; script-src 'none'; object-src 'none';");
 
         if (!$noCacheHeaders) {
             $response->setHeader('Cache-Control', 'private, max-age=864000, immutable');
@@ -174,7 +174,9 @@ class Image implements EntryPoint
 
         $sourceId = $attachment->getSourceId();
 
-        $cacheFilePath = "data/upload/thumbs/{$sourceId}_$size";
+        $file = basename("{$sourceId}_$size");
+
+        $cacheFilePath = "data/upload/thumbs/$file";
 
         if ($useCache && $this->fileManager->isFile($cacheFilePath)) {
             return $this->fileManager->getContents($cacheFilePath);

@@ -27,40 +27,24 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Classes\RecordHooks\CurrencyRecordRate;
+namespace Espo\Core\Utils\Markdown;
 
-use Espo\Core\Exceptions\Conflict;
-use Espo\Core\Record\DeleteParams;
-use Espo\Core\Record\Hook\DeleteHook;
-use Espo\Core\Utils\Currency\DatabasePopulator;
-use Espo\Core\WebSocket\Submission;
-use Espo\Entities\CurrencyRecordRate;
-use Espo\ORM\Entity;
-use Espo\Tools\Currency\Exceptions\NotEnabled;
-use Espo\Tools\Currency\SyncManager;
+use Michelf\Markdown as MarkdownParser;
 
 /**
- * @implements DeleteHook<CurrencyRecordRate>
+ * @internal
  */
-class AfterDelete implements DeleteHook
+class Markdown
 {
-    public function __construct(
-        private SyncManager $syncManager,
-        private Submission $submission,
-        private DatabasePopulator $databasePopulator,
-    ) {}
-
-    public function process(Entity $entity, DeleteParams $params): void
+    /**
+     * @internal
+     */
+    public static function transform(string $text): string
     {
-        $code = $entity->getRecord()->getCode();
+        $parser = new MarkdownParser();
+        $parser->no_markup = true;
+        $parser->no_entities = true;
 
-        try {
-            $this->syncManager->updateCode($code);
-        } catch (NotEnabled $e) {
-            throw new Conflict($e->getMessage(), previous: $e);
-        }
-
-        $this->databasePopulator->process();
-        $this->submission->submit('appParamsUpdate');
+        return $parser->transform($text);
     }
 }

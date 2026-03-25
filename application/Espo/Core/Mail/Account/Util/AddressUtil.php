@@ -27,40 +27,43 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Classes\RecordHooks\CurrencyRecordRate;
+namespace Espo\Core\Mail\Account\Util;
 
-use Espo\Core\Exceptions\Conflict;
-use Espo\Core\Record\DeleteParams;
-use Espo\Core\Record\Hook\DeleteHook;
-use Espo\Core\Utils\Currency\DatabasePopulator;
-use Espo\Core\WebSocket\Submission;
-use Espo\Entities\CurrencyRecordRate;
-use Espo\ORM\Entity;
-use Espo\Tools\Currency\Exceptions\NotEnabled;
-use Espo\Tools\Currency\SyncManager;
+use Espo\Core\Mail\Account\Storage\Params;
+use Espo\Core\Mail\SmtpParams;
+use Espo\Core\Utils\Config;
 
 /**
- * @implements DeleteHook<CurrencyRecordRate>
+ * @internal
  */
-class AfterDelete implements DeleteHook
+class AddressUtil
 {
     public function __construct(
-        private SyncManager $syncManager,
-        private Submission $submission,
-        private DatabasePopulator $databasePopulator,
+        private Config $config,
     ) {}
 
-    public function process(Entity $entity, DeleteParams $params): void
+    /**
+     * @internal
+     */
+    public function isAllowedAddress(Params|SmtpParams $params): bool
     {
-        $code = $entity->getRecord()->getCode();
+        $host = $params instanceof Params ? $params->getHost() : $params->getServer();
+        $port = $params->getPort();
 
-        try {
-            $this->syncManager->updateCode($code);
-        } catch (NotEnabled $e) {
-            throw new Conflict($e->getMessage(), previous: $e);
+        if ($port === null || !$host) {
+            return false;
         }
 
-        $this->databasePopulator->process();
-        $this->submission->submit('appParamsUpdate');
+        $address = $host . ':' . $port;
+
+        return in_array($address, $this->getAllowedAddressList());
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getAllowedAddressList(): array
+    {
+        return $this->config->get('emailServerAllowedAddressList') ?? [];
     }
 }

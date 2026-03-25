@@ -27,40 +27,53 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-namespace Espo\Classes\RecordHooks\CurrencyRecordRate;
+namespace Espo\Core\Webhook;
 
-use Espo\Core\Exceptions\Conflict;
-use Espo\Core\Record\DeleteParams;
-use Espo\Core\Record\Hook\DeleteHook;
-use Espo\Core\Utils\Currency\DatabasePopulator;
-use Espo\Core\WebSocket\Submission;
-use Espo\Entities\CurrencyRecordRate;
-use Espo\ORM\Entity;
-use Espo\Tools\Currency\Exceptions\NotEnabled;
-use Espo\Tools\Currency\SyncManager;
+use Espo\Core\Utils\Config;
 
 /**
- * @implements DeleteHook<CurrencyRecordRate>
+ * @internal
  */
-class AfterDelete implements DeleteHook
+class AddressUtil
 {
     public function __construct(
-        private SyncManager $syncManager,
-        private Submission $submission,
-        private DatabasePopulator $databasePopulator,
+        private Config $config,
     ) {}
 
-    public function process(Entity $entity, DeleteParams $params): void
+    /**
+     * @internal
+     */
+    public function isAllowedUrl(string $url): bool
     {
-        $code = $entity->getRecord()->getCode();
+        /** @var string[] $allowedAddressList */
+        $allowedAddressList = $this->config->get('webhookAllowedAddressList') ?? [];
 
-        try {
-            $this->syncManager->updateCode($code);
-        } catch (NotEnabled $e) {
-            throw new Conflict($e->getMessage(), previous: $e);
+        if (!$allowedAddressList) {
+            return false;
         }
 
-        $this->databasePopulator->process();
-        $this->submission->submit('appParamsUpdate');
+        $host = parse_url($url, PHP_URL_HOST);
+        $port = parse_url($url, PHP_URL_PORT);
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
+        if (!is_string($host)) {
+            return false;
+        }
+
+        if (!is_int($port)) {
+            if ($scheme === 'https') {
+                $port = 443;
+            } else if ($scheme === 'http') {
+                $port = 80;
+            }
+        }
+
+        if (!is_int($port)) {
+            return false;
+        }
+
+        $address = $host . ':' . $port;
+
+        return in_array($address, $allowedAddressList);
     }
 }
