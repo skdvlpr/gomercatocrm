@@ -1,0 +1,51 @@
+[
+    {
+        "name": "status",
+        "width": 15
+    },
+    {
+        "name": "addressCountry",
+        "width": 16
+    },
+    {
+        "name": "addressCity",
+        "width": 16
+    },
+    {
+        "name": "industry",
+        "width": 16
+    },
+    {
+        "name": "accountName",
+        "width": 16
+    },
+    {
+        "name": "name",
+        "link": "true"
+    },
+    {
+        "name": "lastName",
+        "width": 16
+    },
+    {
+        "name": "emailAddress",
+        "width": 20,
+        "notSortable": true
+    },
+    {
+        "name": "opportunityAmount",
+        "width": 16
+    },
+    {
+        "name": "assignedUser",
+        "width": 18
+    },
+    {
+        "name": "convertedAt",
+        "width": 16
+    },
+    {
+        "name": "createdAt",
+        "width": 13
+    }
+]
